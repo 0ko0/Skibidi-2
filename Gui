@@ -43,7 +43,7 @@ end
 function Library:New(config)
 	local self = setmetatable({}, Library)
 	local RunService = game:GetService("RunService")
-	local CoreGui = gethui() or Player:WaitForChild("PlayerGui")
+	local CoreGui = (gethui and gethui()) or Player:WaitForChild("PlayerGui")
 	
 	local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
 	local Camera = workspace.CurrentCamera

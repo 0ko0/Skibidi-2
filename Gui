@@ -42,289 +42,310 @@ end
 
 function Library:New(config)
 	local self = setmetatable({}, Library)
-	local RunService = game:GetService("RunService")
-	local CoreGui = (gethui and gethui()) or Player:WaitForChild("PlayerGui")
 	
-	local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
-	local Camera = workspace.CurrentCamera
-	local Viewport = Camera.ViewportSize
-	
-	local defaultSize = isMobile and UDim2.new(0, Viewport.X * 0.9, 0, Viewport.Y * 0.85) or UDim2.fromOffset(600, 400)
-	local minimizedSize = isMobile and UDim2.new(0, Viewport.X * 0.9, 0, 50) or UDim2.fromOffset(600, 50)
+	config.Title = config.Title or "skibidi"
+	config.Footer = config.Footer or "empty"
+	config.ThemeColor = config.ThemeColor or Color3.fromRGB(80, 150, 255)
+
+	local Camera = game.Workspace.CurrentCamera
+	local ViewportSize = Camera.ViewportSize
+	local IsMobile = UIS.TouchEnabled and not UIS.MouseEnabled
+	local DefaultSize = IsMobile and UDim2.fromScale(0.85, 0.85) or UDim2.fromOffset(600, 420)
 
 	self.Gui = Create("ScreenGui", {
-		Name = "VipSkibidiUI",
+		Name = game:GetService("HttpService"):GenerateGUID(false), 
 		ResetOnSpawn = false,
+		ZIndexBehavior = Enum.ZIndexBehavior.Global,
 		IgnoreGuiInset = true, 
-		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		Parent = CoreGui
+		Parent = gethui() or game.CoreGui
 	})
 
-	local DropShadow = Create("ImageLabel", {
-		Name = "DropShadow",
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = defaultSize + UDim2.fromOffset(60, 60), 
+	local Overlay = Create("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
 		BackgroundTransparency = 1,
-		Image = "rbxassetid://6015536815",
-		ImageColor3 = Color3.fromRGB(0, 0, 0),
-		ImageTransparency = 0.4,
-		ScaleType = Enum.ScaleType.Slice,
-		SliceCenter = Rect.new(49, 49, 450, 450),
+		ZIndex = 0,
 		Parent = self.Gui
 	})
 
 	self.Main = Create("Frame", {
-		Name = "Main",
-		Size = defaultSize,
+		Size = UDim2.fromScale(0.9, 0.9), 
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundColor3 = Color3.fromRGB(13, 13, 18), 
-		BorderSizePixel = 0,
-		ClipsDescendants = true,
+		BackgroundColor3 = Color3.fromRGB(15, 15, 20),
+		BackgroundTransparency = 0.1, 
+		ClipsDescendants = false,
+		ZIndex = 2,
 		Parent = self.Gui
 	}, {
-		Create("UICorner", {CornerRadius = UDim.new(0, 10)}),
+		Create("UICorner", {CornerRadius = UDim.new(0, 14)}),
 		Create("UIStroke", {
-			Color = Color3.fromRGB(255, 255, 255), 
-			Transparency = 0.85, 
-			Thickness = 1.5
+			Color = Color3.fromRGB(255, 255, 255),
+			Transparency = 0.88,
+			Thickness = 1.5,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 		}),
-		
-		Create("UIGradient", {
+		Create("UIGradient", { 
+			Rotation = 45,
 			Color = ColorSequence.new{
-				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-				ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 180, 200))
-			},
-			Rotation = 45
-		}),
-		Create("UISizeConstraint", { 
-			MinSize = Vector2.new(400, 250),
-			MaxSize = Vector2.new(1200, 800)
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 25, 35)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 15))
+			}
 		})
 	})
 
-	RunService.RenderStepped:Connect(function()
-		DropShadow.Position = self.Main.Position
-		DropShadow.Size = self.Main.Size + UDim2.fromOffset(40, 40)
-	end)
+	local DropShadow = Create("ImageLabel", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.new(1, 47, 1, 47),
+		BackgroundTransparency = 1,
+		Image = "rbxassetid://6015895133",
+		ImageColor3 = Color3.fromRGB(0, 0, 0),
+		ImageTransparency = 0.4,
+		SliceCenter = Rect.new(97, 97, 97, 97),
+		ZIndex = 1,
+		Parent = self.Main
+	})
 
 	self.Top = Create("Frame", {
 		Size = UDim2.new(1, 0, 0, 50),
-		BackgroundColor3 = Color3.fromRGB(20, 20, 28),
-		BackgroundTransparency = 0.2,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.97,
+		ZIndex = 3,
 		Parent = self.Main
 	}, {
-		Create("UICorner", {CornerRadius = UDim.new(0, 10)}),
+		Create("UICorner", {CornerRadius = UDim.new(0, 14)}),
 		Create("Frame", { 
 			Size = UDim2.new(1, 0, 0, 10),
 			Position = UDim2.new(0, 0, 1, -10),
-			BackgroundColor3 = Color3.fromRGB(20, 20, 28),
-			BackgroundTransparency = 0.2,
-			BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 0.97,
+			BorderSizePixel = 0
 		}),
-		Create("Frame", {
+		Create("Frame", { 
 			Size = UDim2.new(1, 0, 0, 1),
-			Position = UDim2.new(0, 0, 1, -1),
-			BackgroundColor3 = Color3.fromRGB(80, 150, 255),
+			Position = UDim2.new(0, 0, 1, 0),
+			BackgroundColor3 = config.ThemeColor,
 			BackgroundTransparency = 0.5,
 			BorderSizePixel = 0,
+		}, {
+			Create("UIGradient", {
+				Color = ColorSequence.new{
+					ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 20)),
+					ColorSequenceKeypoint.new(0.5, config.ThemeColor),
+					ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 20))
+				}
+			})
 		})
 	})
 
 	Create("TextLabel", {
-		Text = "<b>" .. (config.Title or "SKIBIDI") .. "</b> <font color='rgb(100,100,130)'>v1.0</font>",
-		RichText = true,
-		Font = Enum.Font.GothamMedium,
+		Text = config.Title,
+		Font = Enum.Font.GothamBlack,
 		TextSize = 16,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
-		TextXAlignment = Enum.TextXAlignment.Left,
+		TextXAlignment = "Left",
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(20, 0),
-		Size = UDim2.new(0, 250, 1, 0),
+		Position = UDim2.fromOffset(20, 8),
+		Size = UDim2.new(0, 300, 0, 20),
+		ZIndex = 4,
 		Parent = self.Top
 	})
 
-	local ControlHolder = Create("Frame", {
-		Size = UDim2.new(0, 100, 1, 0),
-		Position = UDim2.new(1, -100, 0, 0),
+	Create("TextLabel", {
+		Text = config.Footer,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 11,
+		TextColor3 = Color3.fromRGB(130, 130, 150),
+		TextXAlignment = "Left",
 		BackgroundTransparency = 1,
+		Size = UDim2.new(0, 300, 0, 15),
+		Position = UDim2.fromOffset(20, 26),
+		ZIndex = 4,
+		Parent = self.Top
+	})
+
+	local ControlContainer = Create("Frame", {
+		Size = UDim2.new(0, 70, 1, 0),
+		Position = UDim2.new(1, -80, 0, 0),
+		BackgroundTransparency = 1,
+		ZIndex = 5,
 		Parent = self.Top
 	}, {
 		Create("UIListLayout", {
 			FillDirection = Enum.FillDirection.Horizontal,
 			HorizontalAlignment = Enum.HorizontalAlignment.Right,
 			VerticalAlignment = Enum.VerticalAlignment.Center,
-			Padding = UDim.new(0, 8)
-		}),
-		Create("UIPadding", {PaddingRight = UDim.new(0, 15)})
+			Padding = UDim.new(0, 10)
+		})
 	})
 
-	local function CreateControlButton(icon, hoverColor)
+	local IsMinimized = false
+	local function CreateControlButton(icon, color, hoverColor, callback)
 		local btn = Create("TextButton", {
-			Size = UDim2.fromOffset(28, 28),
+			Size = UDim2.fromOffset(26, 26),
+			BackgroundColor3 = Color3.fromRGB(30, 30, 40),
 			Text = icon,
 			Font = Enum.Font.GothamBold,
 			TextSize = 14,
-			TextColor3 = Color3.fromRGB(200, 200, 220),
-			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1,
+			TextColor3 = color,
 			AutoButtonColor = false,
-			Parent = ControlHolder
-		}, { Create("UICorner", {CornerRadius = UDim.new(0, 6)}) })
+			Parent = ControlContainer
+		}, { Create("UICorner", {CornerRadius = UDim.new(1, 0)}) })
 
-		btn.MouseEnter:Connect(function()
-			TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.8, TextColor3 = hoverColor}):Play()
-		end)
-		btn.MouseLeave:Connect(function()
-			TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(200, 200, 220)}):Play()
-		end)
+		btn.MouseEnter:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play() end)
+		btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 40)}):Play() end)
+		btn.MouseButton1Click:Connect(callback)
 		return btn
 	end
 
-	local MinBtn = CreateControlButton("-", Color3.fromRGB(255, 255, 255))
-	local MaxBtn = CreateControlButton("□", Color3.fromRGB(80, 150, 255))
-	local CloseBtn = CreateControlButton("✕", Color3.fromRGB(255, 80, 80))
+	CreateControlButton("-", Color3.fromRGB(255, 255, 255), Color3.fromRGB(100, 100, 120), function()
+		IsMinimized = not IsMinimized
+		local targetSize = IsMinimized and UDim2.fromOffset(DefaultSize.X.Offset, 50) or DefaultSize
+		TweenService:Create(self.Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = targetSize}):Play()
+		self.Container.Visible = not IsMinimized
+	end)
+
+	CreateControlButton("×", Color3.fromRGB(255, 100, 100), Color3.fromRGB(255, 50, 50), function()
+		TweenService:Create(self.Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+			Size = UDim2.fromScale(0.8, 0.8), GroupTransparency = 1
+		}):Play()
+		task.wait(0.3)
+		self.Gui:Destroy()
+	end)
 
 	self.Container = Create("Frame", {
 		Size = UDim2.new(1, 0, 1, -50),
 		Position = UDim2.fromOffset(0, 50),
 		BackgroundTransparency = 1,
 		ClipsDescendants = true,
+		ZIndex = 3,
 		Parent = self.Main
 	})
 
+	local SidebarWidth = IsMobile and 120 or 150
 	self.Sidebar = Create("Frame", {
-		Size = isMobile and UDim2.new(0, 130, 1, -20) or UDim2.new(0, 160, 1, -20),
-		Position = UDim2.fromOffset(10, 10),
-		BackgroundColor3 = Color3.fromRGB(25, 25, 35),
-		BackgroundTransparency = 0.5,
+		Size = UDim2.new(0, SidebarWidth, 1, -16),
+		Position = UDim2.fromOffset(10, 8),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.95,
 		Parent = self.Container
 	}, {
-		Create("UICorner", {CornerRadius = UDim.new(0, 8)}),
+		Create("UICorner", {CornerRadius = UDim.new(0, 10)}),
 		Create("UIStroke", {Color = Color3.fromRGB(255, 255, 255), Transparency = 0.9, Thickness = 1}),
 	})
 
 	self.TabHighlight = Create("Frame", {
-		Size = UDim2.new(1, -12, 0, 34),
-		Position = UDim2.fromOffset(6, 6),
-		BackgroundColor3 = Color3.fromRGB(80, 150, 255),
+		Size = UDim2.new(1, -16, 0, 34),
+		Position = UDim2.fromOffset(8, 8),
+		BackgroundColor3 = config.ThemeColor,
 		BackgroundTransparency = 0.8,
 		Visible = false,
 		ZIndex = 2,
 		Parent = self.Sidebar
 	}, {
-		Create("UICorner", {CornerRadius = UDim.new(0, 6)}),
-		Create("UIStroke", {Color = Color3.fromRGB(80, 150, 255), Thickness = 1.5, Transparency = 0.2})
+		Create("UICorner", {CornerRadius = UDim.new(0, 8)}),
+		Create("UIStroke", {Color = config.ThemeColor, Thickness = 1.5, Transparency = 0.2})
 	})
 
-	self.TabHolder = Create("Frame", {
+	self.TabHolder = Create("ScrollingFrame", {
 		Size = UDim2.new(1, 0, 1, 0),
 		BackgroundTransparency = 1,
+		ScrollBarThickness = 0, 
 		ZIndex = 3,
 		Parent = self.Sidebar
 	}, {
-		Create("UIListLayout", {Padding = UDim.new(0, 4)}),
-		Create("UIPadding", {PaddingTop = UDim.new(0, 6), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6)})
+		Create("UIListLayout", {Padding = UDim.new(0, 6)}),
+		Create("UIPadding", {PaddingTop = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8)})
 	})
 
 	self.Pages = Create("Frame", {
-		Size = isMobile and UDim2.new(1, -155, 1, -20) or UDim2.new(1, -190, 1, -20),
-		Position = isMobile and UDim2.fromOffset(145, 10) or UDim2.fromOffset(180, 10),
+		Size = UDim2.new(1, -(SidebarWidth + 30), 1, -16),
+		Position = UDim2.fromOffset(SidebarWidth + 20, 8),
 		BackgroundTransparency = 1,
 		Parent = self.Container
 	})
 
-	local isMinimized = false
-	local isMaximized = false
-	local cachedSize, cachedPos = defaultSize, UDim2.fromScale(0.5, 0.5)
-
-	MinBtn.MouseButton1Click:Connect(function()
-		isMinimized = not isMinimized
-		if isMinimized then
-			self.Container.Visible = false
-			TweenService:Create(self.Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = minimizedSize}):Play()
-		else
-			TweenService:Create(self.Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-				Size = isMaximized and UDim2.new(1, 0, 1, 0) or cachedSize
-			}):Play()
-			task.wait(0.2)
-			if not isMinimized then self.Container.Visible = true end
-		end
-	end)
-
-	MaxBtn.MouseButton1Click:Connect(function()
-		if isMinimized then return end
-		isMaximized = not isMaximized
-		if isMaximized then
-			cachedSize = self.Main.Size
-			cachedPos = self.Main.Position
-			TweenService:Create(self.Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 1, 0),
-				Position = UDim2.fromScale(0.5, 0.5)
-			}):Play()
-		else
-			TweenService:Create(self.Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-				Size = cachedSize,
-				Position = cachedPos
-			}):Play()
-		end
-	end)
-
-	CloseBtn.MouseButton1Click:Connect(function()
-		TweenService:Create(self.Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-			Size = UDim2.new(0, 0, 0, 0),
-			GroupTransparency = 1 
-		}):Play()
-		TweenService:Create(DropShadow, TweenInfo.new(0.3), {ImageTransparency = 1}):Play()
-		task.wait(0.35)
-		self.Gui:Destroy()
-	end)
-
 	do
-		local dragging, dragInput, dragStart, startPos
+		local Dragging, DragInput, DragStart, StartPos
+		local TargetPos = self.Main.Position
+
+		local function UpdateDrag()
+			local Delta = DragInput.Position - DragStart
+			TargetPos = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y)
+		end
+
 		self.Top.InputBegan:Connect(function(input)
-			if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not isMaximized then
-				dragging = true
-				dragStart = input.Position
-				startPos = self.Main.Position
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				Dragging = true
+				DragStart = input.Position
+				StartPos = self.Main.Position
 				
 				input.Changed:Connect(function()
-					if input.UserInputState == Enum.UserInputState.End then
-						dragging = false
-					end
+					if input.UserInputState == Enum.UserInputState.End then Dragging = false end
 				end)
 			end
 		end)
 
 		self.Top.InputChanged:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-				dragInput = input
+				DragInput = input
 			end
 		end)
 
 		UIS.InputChanged:Connect(function(input)
-			if input == dragInput and dragging then
-				local delta = input.Position - dragStart
-				local targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-				
-				TweenService:Create(self.Main, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = targetPos}):Play()
+			if input == DragInput and Dragging then UpdateDrag() end
+		end)
+
+		game:GetService("RunService").RenderStepped:Connect(function()
+			if self.Main.Parent then
+				local currentPos = self.Main.Position
+				self.Main.Position = currentPos:Lerp(TargetPos, 0.16) 
 			end
 		end)
 	end
 
 	self.Open = true
 	UIS.InputBegan:Connect(function(input, gpe)
-		if not gpe and Library.ToggleKey and input.KeyCode == Library.ToggleKey then
+		if not gpe and input.KeyCode == (Library.ToggleKey or Enum.KeyCode.RightControl) then
 			self.Open = not self.Open
-			self.Gui.Enabled = self.Open
+			TweenService:Create(self.Main, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+				Size = self.Open and DefaultSize or UDim2.new(0, 0, 0, 0),
+				Position = self.Open and TargetPos or UDim2.fromScale(0.5, 0.5)
+			}):Play()
+			TweenService:Create(Overlay, TweenInfo.new(0.4), {BackgroundTransparency = self.Open and 0.6 or 1}):Play()
 		end
 	end)
 
-	self.Main.Size = UDim2.fromScale(0, 0)
-	DropShadow.ImageTransparency = 1
-	TweenService:Create(self.Main, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = defaultSize}):Play()
-	TweenService:Create(DropShadow, TweenInfo.new(0.6), {ImageTransparency = 0.4}):Play()
+	if IsMobile then
+		local MobileToggle = Create("TextButton", {
+			Size = UDim2.fromOffset(45, 45),
+			Position = UDim2.fromScale(0.5, 0.05),
+			AnchorPoint = Vector2.new(0.5, 0),
+			BackgroundColor3 = config.ThemeColor,
+			Text = "⚙",
+			Font = Enum.Font.GothamBold,
+			TextSize = 20,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Parent = self.Gui
+		}, { Create("UICorner", {CornerRadius = UDim.new(1, 0)}) })
+
+		MobileToggle.MouseButton1Click:Connect(function()
+			self.Open = not self.Open
+			self.Main.Visible = true
+			TweenService:Create(self.Main, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+				Size = self.Open and DefaultSize or UDim2.fromScale(0, 0)
+			}):Play()
+		end)
+	end
+
+	self.Main.Size = UDim2.fromScale(0.7, 0.7)
+	self.Main.GroupTransparency = 1
+	TweenService:Create(self.Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = DefaultSize,
+		GroupTransparency = 0
+	}):Play()
+	TweenService:Create(Overlay, TweenInfo.new(0.5), {BackgroundTransparency = 0.6}):Play()
 
 	return self
 end

@@ -12,6 +12,7 @@ end
 
 local Library = {}
 Library.__index = Library
+Library.ToggleKey = Enum.KeyCode.RightControl 
 
 function Library.SettingManager()
 	local Manager = {}
@@ -364,9 +365,6 @@ function Library:New(config)
 		Size = uiSize,
 		BackgroundTransparency = 0
 	}):Play()
-
-	return self
-end
 
 	function Library:Notify(config)
 		local title = config.Title or "Notification"

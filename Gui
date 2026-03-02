@@ -1,7 +1,26 @@
-
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Player = game:GetService("Players").LocalPlayer
+
+local Colors = {
+	Background = Color3.fromRGB(8, 8, 12),      
+	Sidebar = Color3.fromRGB(12, 12, 18),        
+	Element = Color3.fromRGB(18, 18, 26),        
+	ElementHover = Color3.fromRGB(25, 25, 35),   
+	Accent = Color3.fromRGB(0, 212, 255),       
+	AccentGlow = Color3.fromRGB(0, 160, 255),
+	TextMain = Color3.fromRGB(255, 255, 255),
+	TextSub = Color3.fromRGB(150, 160, 180),   
+	Stroke = Color3.fromRGB(30, 30, 45)          
+}
+
+local function Tween(obj, props, time, style)
+	time = time or 0.3
+	style = style or Enum.EasingStyle.Quint
+	local t = TweenService:Create(obj, TweenInfo.new(time, style, Enum.EasingDirection.Out), props)
+	t:Play()
+	return t
+end
 
 local function Create(class, props, children)
 	local obj = Instance.new(class)
@@ -45,12 +64,10 @@ end
 function Library:New(config)
 	local self = setmetatable({}, Library)
 	
-	-- Cấu hình mặc định (VIP Defaults)
 	config.Title = config.Title or "Dcus Hub"
 	config.Footer = config.Footer or "Premium Interface • v2.3"
 	config.AccentColor = config.AccentColor or Color3.fromRGB(80, 150, 255)
 	
-	-- Nhận diện thiết bị (Mobile / PC)
 	local isMobile = UIS.TouchEnabled and not UIS.MouseEnabled
 	local uiSize = isMobile and UDim2.fromOffset(480, 280) or UDim2.fromOffset(600, 400)
 
@@ -61,82 +78,89 @@ function Library:New(config)
 		Parent = gethui and gethui() or Player:WaitForChild("PlayerGui")
 	})
 
-	-- Main UI Background
 	self.Main = Create("Frame", {
 		Size = uiSize,
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundColor3 = Color3.fromRGB(15, 15, 20),
+		BackgroundColor3 = Colors.Background, 
 		BorderSizePixel = 0,
-		ClipsDescendants = false, -- Để hiển thị bóng đổ
+		ClipsDescendants = false, 
 		Parent = self.Gui
 	}, {
-		Create("UICorner", {CornerRadius = UDim.new(0, 10)}),
-		Create("UIStroke", {Color = config.AccentColor, Thickness = 1.5, Transparency = 0.5}),
-		-- Ràng buộc kích thước không bị vỡ trên màn hình nhỏ
+		Create("UICorner", {CornerRadius = UDim.new(0, 12)}), 
+		Create("UIStroke", {Color = Colors.Accent, Thickness = 1.5, Transparency = 0.3}),
+		
 		Create("UISizeConstraint", {
-			MaxSize = Vector2.new(800, 600),
-			MinSize = Vector2.new(350, 250)
+			MaxSize = Vector2.new(900, 650),
+			MinSize = Vector2.new(400, 250)
 		}),
-		-- Hiệu ứng bóng đổ 3D (Drop Shadow)
+		
+		
 		Create("ImageLabel", {
-			Name = "Shadow",
+			Name = "GlowShadow",
 			BackgroundTransparency = 1,
 			Image = "rbxassetid://6015045957",
-			ImageColor3 = Color3.new(0, 0, 0),
-			ImageTransparency = 0.4,
+			ImageColor3 = Colors.AccentGlow, 
+			ImageTransparency = 0.3,
 			SliceCenter = Rect.new(49, 49, 450, 450),
 			ScaleType = Enum.ScaleType.Slice,
-			Size = UDim2.new(1, 46, 1, 46),
-			Position = UDim2.new(0, -23, 0, -23),
+			Size = UDim2.new(1, 60, 1, 60),
+			Position = UDim2.new(0, -30, 0, -30),
 			ZIndex = -1
 		})
 	})
 
-	-- Top Bar (Thanh kéo UI)
 	self.Top = Create("Frame", {
-		Size = UDim2.new(1, 0, 0, 45),
-		BackgroundColor3 = Color3.fromRGB(20, 20, 28),
-		BackgroundTransparency = 0.3,
+		Size = UDim2.new(1, 0, 0, 50),
+		BackgroundColor3 = Colors.Sidebar,
+		BackgroundTransparency = 0.5,
 		Parent = self.Main
 	}, {
-		Create("UICorner", {CornerRadius = UDim.new(0, 10)}),
-		Create("Frame", { -- Che góc tròn bên dưới của Topbar
+		Create("UICorner", {CornerRadius = UDim.new(0, 12)}),
+		Create("Frame", { 
 			Size = UDim2.new(1, 0, 0, 10),
 			Position = UDim2.new(0, 0, 1, -10),
-			BackgroundColor3 = Color3.fromRGB(20, 20, 28),
-			BackgroundTransparency = 0.3,
+			BackgroundColor3 = Colors.Sidebar,
+			BackgroundTransparency = 0.5,
 			BorderSizePixel = 0,
 		}),
-		Create("Frame", { -- Đường gạch ngang
+		
+		Create("Frame", { 
 			Size = UDim2.new(1, 0, 0, 1),
-			Position = UDim2.new(0, 0, 1, -1),
-			BackgroundColor3 = Color3.fromRGB(45, 45, 60),
+			Position = UDim2.new(0, 0, 1, 0),
+			BackgroundColor3 = Colors.Accent,
 			BorderSizePixel = 0,
-		})
-	})
-
-	-- Tiêu đề Gradient
-	local TitleLabel = Create("TextLabel", {
-		Text = config.Title,
-		Font = Enum.Font.GothamBold,
-		TextSize = 16,
-		TextColor3 = Color3.fromRGB(255, 255, 255),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(15, 0),
-		Size = UDim2.new(0, 200, 1, 0),
-		Parent = self.Top
-	}, {
-		Create("UIGradient", {
-			Color = ColorSequence.new({
-				ColorSequenceKeypoint.new(0, config.AccentColor),
-				ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+			BackgroundTransparency = 0.3
+		}, {
+			Create("UIGradient", {
+				Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 1),
+					NumberSequenceKeypoint.new(0.5, 0),
+					NumberSequenceKeypoint.new(1, 1)
+				})
 			})
 		})
 	})
 
-	-- Footer / Phụ đề
+	local TitleLabel = Create("TextLabel", {
+		Text = config.Title,
+		Font = Enum.Font.GothamBlack, 
+		TextSize = 18,
+		TextColor3 = Colors.TextMain,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(20, 0),
+		Size = UDim2.new(0, 300, 1, 0),
+		Parent = self.Top
+	}, {
+		Create("UIGradient", {
+			Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Colors.Accent),
+				ColorSequenceKeypoint.new(1, Colors.TextMain)
+			})
+		})
+	})
+
 	Create("TextLabel", {
 		Text = config.Footer,
 		Font = Enum.Font.GothamMedium,
@@ -149,7 +173,6 @@ function Library:New(config)
 		Parent = self.Top
 	})
 
-	-- Control Buttons (Minimize & Close)
 	local ControlContainer = Create("Frame", {
 		Size = UDim2.new(0, 60, 1, 0),
 		Position = UDim2.new(1, -70, 0, 0),
@@ -179,7 +202,6 @@ function Library:New(config)
 		Parent = ControlContainer
 	})
 
-	-- Container (Chứa Sidebar và Tabs)
 	self.Container = Create("Frame", {
 		Size = UDim2.new(1, 0, 1, -45),
 		Position = UDim2.fromOffset(0, 45),
@@ -188,7 +210,6 @@ function Library:New(config)
 		Parent = self.Main
 	})
 
-	-- Sidebar (Chứa các Tab)
 	self.Sidebar = Create("Frame", {
 		Size = UDim2.new(0, 140, 1, -16),
 		Position = UDim2.fromOffset(8, 8),
@@ -229,12 +250,11 @@ function Library:New(config)
 		Parent = self.Container
 	})
 
-	-- Floating Toggle Button (Nút nổi VIP để mở lại UI)
 	local FloatingToggle = Create("ImageButton", {
 		Size = UDim2.fromOffset(45, 45),
-		Position = isMobile and UDim2.new(0.5, -22, 0, 10) or UDim2.new(0.5, -22, 0, 10), -- Ở giữa phía trên màn hình
+		Position = isMobile and UDim2.new(0.5, -22, 0, 10) or UDim2.new(0.5, -22, 0, 10), 
 		BackgroundColor3 = Color3.fromRGB(15, 15, 20),
-		Image = "rbxassetid://10057376223", -- Icon VIP
+		Image = "rbxassetid://10057376223", -- Icon
 		ImageColor3 = config.AccentColor,
 		Visible = false,
 		ZIndex = 100,
@@ -242,7 +262,7 @@ function Library:New(config)
 	}, {
 		Create("UICorner", {CornerRadius = UDim.new(1, 0)}),
 		Create("UIStroke", {Color = config.AccentColor, Thickness = 2}),
-		Create("ImageLabel", { -- Vòng sáng (Glow)
+		Create("ImageLabel", { 
 			BackgroundTransparency = 1,
 			Image = "rbxassetid://6015045957",
 			ImageColor3 = config.AccentColor,
@@ -255,14 +275,13 @@ function Library:New(config)
 		})
 	})
 
-	-- Hệ thống đóng/mở UI mượt mà (Smooth Animation System)
 	self.Open = true
 	local function ToggleUI(state)
 		self.Open = state
 		if state then
 			FloatingToggle.Visible = false
 			self.Main.Visible = true
-			-- Animation Pop-in
+			
 			self.Main.Size = UDim2.fromScale(0.8, 0.8)
 			self.Main.BackgroundTransparency = 1
 			self.Main.UIStroke.Transparency = 1
@@ -274,7 +293,7 @@ function Library:New(config)
 			}):Play()
 			TweenService:Create(self.Main.UIStroke, TweenInfo.new(0.5), {Transparency = 0.5}):Play()
 		else
-			-- Animation Pop-out
+			
 			TweenService:Create(self.Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
 				Size = UDim2.fromScale(0.8, 0.8),
 				BackgroundTransparency = 1
@@ -287,7 +306,7 @@ function Library:New(config)
 		end
 	end
 
-	-- Logic Kéo thả (Smooth Dragging - Hỗ trợ cực tốt Mobile & PC)
+	
 	do
 		local dragging, dragInput, dragStart, startPos
 		local function update(input)
@@ -317,7 +336,7 @@ function Library:New(config)
 		end)
 	end
 
-	-- Dragging cho Floating Toggle
+	
 	do
 		local dragging, dragInput, dragStart, startPos
 		FloatingToggle.InputBegan:Connect(function(input)
@@ -338,7 +357,7 @@ function Library:New(config)
 		end)
 	end
 
-	-- Các Event Click
+	
 	MinimizeBtn.MouseButton1Click:Connect(function()
 		ToggleUI(false)
 	end)
@@ -351,14 +370,14 @@ function Library:New(config)
 		ToggleUI(true)
 	end)
 
-	-- Keybind Mở/Đóng (PC)
+	
 	UIS.InputBegan:Connect(function(input, gpe)
 		if not gpe and input.KeyCode == Library.ToggleKey then
 			ToggleUI(not self.Open)
 		end
 	end)
 
-	-- Hiệu ứng Intro khi vừa khởi chạy script
+	
 	self.Main.Size = UDim2.fromScale(0.5, 0.5)
 	self.Main.BackgroundTransparency = 1
 	TweenService:Create(self.Main, TweenInfo.new(0.6, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
@@ -599,13 +618,27 @@ function Library:New(config)
 			RunBadge:FindFirstChild("TextLabel").Parent = RunBadge
 
 			local Hit = Create("TextButton", {Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 5, Parent = BtnBg})
-			Hit.MouseButton1Down:Connect(function()
-				TweenService:Create(BtnBg, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 32, 50)}):Play()
-				TweenService:Create(RunBadge, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 150, 255)}):Play()
+			
+			
+			Hit.MouseEnter:Connect(function()
+				Tween(BtnBg, {BackgroundColor3 = Colors.ElementHover}, 0.2)
+				Tween(BtnBg:FindFirstChildOfClass("UIStroke"), {Color = Colors.Accent}, 0.2)
 			end)
+
+			
+			Hit.MouseLeave:Connect(function()
+				Tween(BtnBg, {BackgroundColor3 = Colors.Element}, 0.2)
+				Tween(BtnBg:FindFirstChildOfClass("UIStroke"), {Color = Colors.Stroke}, 0.2)
+			end)
+
+			Hit.MouseButton1Down:Connect(function()
+				Tween(BtnBg, {BackgroundColor3 = Colors.Accent}, 0.1)
+				Tween(RunBadge, {BackgroundColor3 = Colors.AccentGlow}, 0.1)
+			end)
+			
 			Hit.MouseButton1Up:Connect(function()
-				TweenService:Create(BtnBg, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(22, 22, 30)}):Play()
-				TweenService:Create(RunBadge, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(40, 40, 55)}):Play()
+				Tween(BtnBg, {BackgroundColor3 = Colors.ElementHover}, 0.3)
+				Tween(RunBadge, {BackgroundColor3 = Color3.fromRGB(40, 40, 55)}, 0.3)
 				callback()
 			end)
 		end

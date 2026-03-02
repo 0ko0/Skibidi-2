@@ -1143,6 +1143,238 @@ function Library:New(config)
 			return ToggleAPI
 		end
 
+function Tab:Slider(config)
+			local text = config.Name or "Slider"
+			local min = config.Min or 0
+			local max = config.Max or 100
+			local default = config.Default or min
+			local rounding = config.Rounding or 0 
+			local suffix = config.Suffix or "" 
+			local callback = config.Callback or function() end
+
+			local SliderBg = Create("Frame", {
+				Size = UDim2.new(1, 0, 0, 55), 
+				BackgroundColor3 = Colors.Element,
+				Parent = Page
+			}, {
+				Create("UICorner", {CornerRadius = UDim.new(0, 8)}),
+				Create("UIStroke", {Color = Colors.Stroke, Thickness = 1})
+			})
+
+			local Label = Create("TextLabel", {
+				Text = text,
+				Font = Enum.Font.GothamMedium,
+				TextSize = 14,
+				TextColor3 = Colors.TextMain,
+				BackgroundTransparency = 1,
+				Position = UDim2.fromOffset(15, 8),
+				Size = UDim2.new(1, -100, 0, 20),
+				TextXAlignment = "Left",
+				Parent = SliderBg
+			})
+
+			
+			local ValueBoxBg = Create("Frame", {
+				Size = UDim2.new(0, 60, 0, 22),
+				Position = UDim2.new(1, -75, 0, 7),
+				BackgroundColor3 = Color3.fromRGB(15, 15, 20),
+				Parent = SliderBg
+			}, {
+				Create("UICorner", {CornerRadius = UDim.new(0, 6)}),
+				Create("UIStroke", {Color = Color3.fromRGB(50, 50, 70), Thickness = 1})
+			})
+
+			local ValueBox = Create("TextBox", {
+				Text = tostring(default) .. suffix,
+				Font = Enum.Font.GothamBold,
+				TextSize = 12,
+				TextColor3 = Colors.Accent,
+				BackgroundTransparency = 1,
+				Size = UDim2.fromScale(1, 1),
+				TextXAlignment = "Center",
+				ClearTextOnFocus = false,
+				Parent = ValueBoxBg
+			})
+
+			
+			local TrackContainer = Create("Frame", {
+				Size = UDim2.new(1, -30, 0, 20),
+				Position = UDim2.new(0, 15, 1, -25),
+				BackgroundTransparency = 1,
+				Parent = SliderBg
+			})
+
+			
+			local Track = Create("Frame", {
+				Size = UDim2.new(1, 0, 0, 4),
+				AnchorPoint = Vector2.new(0, 0.5),
+				Position = UDim2.new(0, 0, 0.5, 0),
+				BackgroundColor3 = Color3.fromRGB(35, 35, 50),
+				Parent = TrackContainer
+			}, { Create("UICorner", {CornerRadius = UDim.new(1, 0)}) })
+
+			
+			local Fill = Create("Frame", {
+				Size = UDim2.fromScale((default - min) / (max - min), 1),
+				BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+				Parent = Track
+			}, { 
+				Create("UICorner", {CornerRadius = UDim.new(1, 0)}),
+				Create("UIGradient", {
+					Color = ColorSequence.new({
+						ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 255)),
+						ColorSequenceKeypoint.new(1, Colors.Accent)
+					})
+				})
+			})
+
+			
+			local Knob = Create("Frame", {
+				Size = UDim2.fromOffset(12, 12),
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromScale((default - min) / (max - min), 0.5),
+				BackgroundColor3 = Colors.TextMain,
+				Parent = Track
+			}, { 
+				Create("UICorner", {CornerRadius = UDim.new(1, 0)}),
+				Create("UIStroke", {Color = Colors.Accent, Thickness = 2}),
+	
+				Create("ImageLabel", {
+					Name = "Glow",
+					BackgroundTransparency = 1,
+					Image = "rbxassetid://6015045957",
+					ImageColor3 = Colors.AccentGlow,
+					ImageTransparency = 1, 
+					Size = UDim2.new(1, 20, 1, 20),
+					Position = UDim2.new(0, -10, 0, -10),
+					ZIndex = 0
+				})
+			})
+
+			
+			local Hitbox = Create("TextButton", {
+				Text = "",
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 1, 10),
+				Position = UDim2.new(0, 0, 0, -5),
+				ZIndex = 10,
+				Parent = TrackContainer
+			})
+
+			
+			local function FormatValue(val)
+				if rounding == 0 then
+					return math.floor(val)
+				else
+					local mult = 10 ^ rounding
+					return math.floor(val * mult + 0.5) / mult
+				end
+			end
+
+			local currentValue = FormatValue(default)
+
+			
+			local function SetValue(val, bypassCallback)
+				val = math.clamp(val, min, max)
+				currentValue = FormatValue(val)
+				local percent = (currentValue - min) / (max - min)
+
+				
+				TweenService:Create(Fill, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.fromScale(percent, 1)}):Play()
+				TweenService:Create(Knob, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.fromScale(percent, 0.5)}):Play()
+				
+				ValueBox.Text = tostring(currentValue) .. suffix
+				if not bypassCallback then
+					callback(currentValue)
+				end
+			end
+
+			
+			local dragging = false
+			local function UpdateDrag(input)
+				local trackSize = Track.AbsoluteSize.X
+				local trackPos = Track.AbsolutePosition.X
+				local pos = math.clamp((input.Position.X - trackPos) / trackSize, 0, 1)
+				local rawValue = min + (max - min) * pos
+				SetValue(rawValue)
+			end
+
+			Hitbox.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					dragging = true
+					UpdateDrag(input)
+					
+					TweenService:Create(Knob, TweenInfo.new(0.2), {Size = UDim2.fromOffset(16, 16)}):Play()
+					TweenService:Create(Knob.Glow, TweenInfo.new(0.2), {ImageTransparency = 0.5}):Play()
+					TweenService:Create(Track, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 6)}):Play()
+				end
+			end)
+
+			UIS.InputChanged:Connect(function(input)
+				if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+					UpdateDrag(input)
+				end
+			end)
+
+			UIS.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					if dragging then
+						dragging = false
+						
+						TweenService:Create(Knob, TweenInfo.new(0.3), {Size = UDim2.fromOffset(12, 12)}):Play()
+						TweenService:Create(Knob.Glow, TweenInfo.new(0.3), {ImageTransparency = 1}):Play()
+						TweenService:Create(Track, TweenInfo.new(0.3), {Size = UDim2.new(1, 0, 0, 4)}):Play()
+					end
+				end
+			end)
+
+			
+			Hitbox.MouseEnter:Connect(function()
+				if not dragging then
+					TweenService:Create(Knob, TweenInfo.new(0.2), {Size = UDim2.fromOffset(14, 14)}):Play()
+					TweenService:Create(Knob.Glow, TweenInfo.new(0.2), {ImageTransparency = 0.8}):Play()
+				end
+			end)
+
+			Hitbox.MouseLeave:Connect(function()
+				if not dragging then
+					TweenService:Create(Knob, TweenInfo.new(0.2), {Size = UDim2.fromOffset(12, 12)}):Play()
+					TweenService:Create(Knob.Glow, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+				end
+			end)
+
+			
+			ValueBox.Focused:Connect(function()
+				ValueBox.Text = tostring(currentValue) 
+				TweenService:Create(ValueBoxBg:FindFirstChildOfClass("UIStroke"), TweenInfo.new(0.3), {Color = Colors.Accent}):Play()
+			end)
+
+			ValueBox.FocusLost:Connect(function()
+				TweenService:Create(ValueBoxBg:FindFirstChildOfClass("UIStroke"), TweenInfo.new(0.3), {Color = Color3.fromRGB(50, 50, 70)}):Play()
+				local num = tonumber(ValueBox.Text)
+				if num then
+					SetValue(num)
+				else
+					
+					ValueBox.Text = tostring(currentValue) .. suffix
+				end
+			end)
+
+			
+			SetValue(default, true)
+
+			
+			local SliderAPI = {}
+			function SliderAPI:Set(val)
+				SetValue(val)
+			end
+			function SliderAPI:GetValue()
+				return currentValue
+			end
+
+			return SliderAPI
+		end
+
 		function Tab:Dropdown(config)
 			local text = config.Name or "Dropdown"
 			local list = config.List or {}

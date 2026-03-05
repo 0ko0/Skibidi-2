@@ -3,7 +3,7 @@ local TweenService = game:GetService("TweenService")
 local Player = game:GetService("Players").LocalPlayer
 
 local Colors = {
-	Background = Color3.fromRGB(8, 8, 12),      
+	Background = Color3.fromRGB(0, 0, 0),      
 	Sidebar = Color3.fromRGB(12, 12, 18),        
 	Element = Color3.fromRGB(18, 18, 26),        
 	ElementHover = Color3.fromRGB(25, 25, 35),   
@@ -11,7 +11,7 @@ local Colors = {
 	AccentGlow = Color3.fromRGB(0, 160, 255),
 	TextMain = Color3.fromRGB(255, 255, 255),
 	TextSub = Color3.fromRGB(150, 160, 180),   
-	Stroke = Color3.fromRGB(30, 30, 45)          
+	Stroke = Color3.fromRGB(110, 150, 255)       
 }
 
 local function Tween(obj, props, time, style)
@@ -1066,7 +1066,7 @@ function Library:New(config)
 				local knobSize = isInteracting and UDim2.fromOffset(24, 20) or UDim2.fromOffset(20, 20)
 				local stateTextColor = val and Colors.Accent or Colors.TextSub
 
-				TweenService:Create(Knob, TweenInfo.new(0.35, Enum.EasingStyle.Spring, Enum.EasingDirection.Out, 0.4), {
+				TweenService:Create(Knob, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 					Position = knobPos,
 					Size = knobSize
 				}):Play()
@@ -2310,77 +2310,289 @@ function Tab:Slider(config)
 		end
 
 		function Tab:Textbox(config)
-			local text = config.Name or "Textbox"
-			local placeholder = config.Placeholder or "Enter..."
+			local text = config.Name or config.Title or "Textbox"
+			local placeholder = config.Placeholder or "Enter text here..."
+			local default = config.Default or ""
+			local numericOnly = config.Numeric or false
+			local maxChars = config.MaxChars or 0 
+			local clearOnFocus = config.ClearTextOnFocus == nil and false or config.ClearTextOnFocus
+			local multiLine = config.MultiLine or false
+			local realtime = config.Realtime or false
 			local callback = config.Callback or function() end
 
+			local HapticService = game:GetService("HapticService")
+			local isMobile = UIS.TouchEnabled and not UIS.MouseEnabled
+
+			
+			local baseHeight = multiLine and 75 or 55
+			
 			local BoxBg = Create("Frame", {
-				Size = UDim2.new(1, 0, 0, 40),
-				BackgroundColor3 = Color3.fromRGB(22, 22, 30),
+				Size = UDim2.new(1, 0, 0, baseHeight),
+				BackgroundColor3 = Colors.Element,
+				ClipsDescendants = false,
 				Parent = Page
 			}, {
 				Create("UICorner", {CornerRadius = UDim.new(0, 8)}),
-				Create("UIStroke", {Color = Color3.fromRGB(45, 45, 60), Thickness = 1})
+				Create("UIStroke", {Name = "Stroke", Color = Colors.Stroke, Thickness = 1, Transparency = 0.2}),
 			})
 
-			local Label = Create("TextLabel", {
-				Text = text,
-				Font = Enum.Font.GothamMedium,
-				TextSize = 13,
-				TextColor3 = Color3.fromRGB(200, 200, 220),
+			
+			local Glow = Create("ImageLabel", {
+				Name = "FocusGlow",
 				BackgroundTransparency = 1,
-				Position = UDim2.fromOffset(15, 0),
-				Size = UDim2.new(1, -80, 1, 0), 
-				TextXAlignment = "Left",
+				Image = "rbxassetid://6015045957",
+				ImageColor3 = Colors.AccentGlow,
+				ImageTransparency = 1,
+				SliceCenter = Rect.new(49, 49, 450, 450),
+				ScaleType = Enum.ScaleType.Slice,
+				Size = UDim2.new(1, 30, 1, 30),
+				Position = UDim2.new(0, -15, 0, -15),
+				ZIndex = 0,
 				Parent = BoxBg
 			})
 
+			
+			local Label = Create("TextLabel", {
+				Text = text,
+				Font = Enum.Font.GothamBold,
+				TextSize = 13,
+				TextColor3 = Colors.TextMain,
+				BackgroundTransparency = 1,
+				Position = UDim2.fromOffset(15, 8),
+				Size = UDim2.new(1, -30, 0, 15), 
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 2,
+				Parent = BoxBg
+			})
+
+			
 			local InputHolder = Create("Frame", {
-				Size = UDim2.new(0, 60, 0, 26), 
-				Position = UDim2.new(1, -75, 0.5, -13),
-				BackgroundColor3 = Color3.fromRGB(15, 15, 20),
+				Size = UDim2.new(1, -30, 1, -30),
+				Position = UDim2.new(0, 15, 0, 25),
+				BackgroundColor3 = Color3.fromRGB(15, 15, 22),
 				ClipsDescendants = true,
+				ZIndex = 2,
 				Parent = BoxBg
 			}, {
 				Create("UICorner", {CornerRadius = UDim.new(0, 6)}),
-				Create("UIStroke", {Color = Color3.fromRGB(50, 50, 70), Thickness = 1})
+				Create("UIStroke", {Name = "InnerStroke", Color = Color3.fromRGB(40, 40, 55), Thickness = 1})
 			})
 
-			local Input = Create("TextBox", {
-				Text = "",
-				PlaceholderText = placeholder,
-				Font = Enum.Font.GothamMedium,
-				TextSize = 11,
-				TextColor3 = Color3.fromRGB(255, 255, 255),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, -10, 1, 0),
-				Position = UDim2.fromOffset(5, 0),
-				TextXAlignment = "Center",
+			
+			local Underline = Create("Frame", {
+				Size = UDim2.new(0, 0, 0, 2),
+				Position = UDim2.new(0.5, 0, 1, -2),
+				AnchorPoint = Vector2.new(0.5, 0),
+				BackgroundColor3 = Colors.Accent,
+				BorderSizePixel = 0,
+				ZIndex = 3,
 				Parent = InputHolder
 			})
 
+			
+			local Input = Create("TextBox", {
+				Text = default,
+				PlaceholderText = placeholder,
+				Font = Enum.Font.GothamMedium,
+				TextSize = 12,
+				TextColor3 = Color3.fromRGB(220, 220, 240),
+				PlaceholderColor3 = Color3.fromRGB(100, 100, 120),
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1, -65, 1, -4), 
+				Position = UDim2.new(0, 10, 0, 2),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextYAlignment = multiLine and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center,
+				TextWrapped = multiLine,
+				ClearTextOnFocus = clearOnFocus,
+				MultiLine = multiLine,
+				ZIndex = 3,
+				Parent = InputHolder
+			})
+
+			
+			local CharCounter = Create("TextLabel", {
+				Text = maxChars > 0 and string.format("%d/%d", #default, maxChars) or "",
+				Font = Enum.Font.GothamMedium,
+				TextSize = 10,
+				TextColor3 = Colors.TextSub,
+				BackgroundTransparency = 1,
+				Position = UDim2.new(1, -15, 0, 8),
+				Size = UDim2.new(0, 100, 0, 15),
+				TextXAlignment = Enum.TextXAlignment.Right,
+				AnchorPoint = Vector2.new(1, 0),
+				TextTransparency = maxChars > 0 and 0.3 or 1,
+				ZIndex = 2,
+				Parent = BoxBg
+			})
+
+			
+			local UtilsContainer = Create("Frame", {
+				Size = UDim2.new(0, 50, 1, 0),
+				Position = UDim2.new(1, -50, 0, 0),
+				BackgroundTransparency = 1,
+				ZIndex = 4,
+				Parent = InputHolder
+			}, {
+				Create("UIListLayout", {
+					FillDirection = Enum.FillDirection.Horizontal,
+					HorizontalAlignment = Enum.HorizontalAlignment.Right,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+					Padding = UDim.new(0, 5)
+				}),
+				Create("UIPadding", {PaddingRight = UDim.new(0, 5)})
+			})
+
+			
+			local ClearBtn = Create("ImageButton", {
+				Size = UDim2.fromOffset(18, 18),
+				BackgroundTransparency = 1,
+				Image = "rbxassetid://10137563140", -- Icon X
+				ImageColor3 = Color3.fromRGB(255, 80, 80),
+				ImageTransparency = 1, 
+				AutoButtonColor = false,
+				Parent = UtilsContainer
+			})
+
+			local CopyBtn = Create("ImageButton", {
+				Size = UDim2.fromOffset(16, 16),
+				BackgroundTransparency = 1,
+				Image = "rbxassetid://10827798319", -- Icon Copy
+				ImageColor3 = Colors.Accent,
+				ImageTransparency = 1, 
+				AutoButtonColor = false,
+				Parent = UtilsContainer
+			})
+
+			
+			local function UpdateUtilsVisibility()
+				local hasText = #Input.Text > 0
+				TweenService:Create(ClearBtn, TweenInfo.new(0.2), {ImageTransparency = hasText and 0.3 or 1}):Play()
+				TweenService:Create(CopyBtn, TweenInfo.new(0.2), {ImageTransparency = hasText and 0.3 or 1}):Play()
+				
+				if maxChars > 0 then
+					CharCounter.Text = string.format("%d/%d", #Input.Text, maxChars)
+					if #Input.Text >= maxChars then
+						TweenService:Create(CharCounter, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 80, 80)}):Play()
+					else
+						TweenService:Create(CharCounter, TweenInfo.new(0.2), {TextColor3 = Colors.TextSub}):Play()
+					end
+				end
+			end
+
+			ClearBtn.MouseButton1Click:Connect(function()
+				Input.Text = ""
+				UpdateUtilsVisibility()
+				Input:CaptureFocus()
+			end)
+			ClearBtn.MouseEnter:Connect(function() if #Input.Text>0 then Tween(ClearBtn, {ImageTransparency = 0, Size = UDim2.fromOffset(20, 20)}, 0.1) end end)
+			ClearBtn.MouseLeave:Connect(function() Tween(ClearBtn, {ImageTransparency = 0.3, Size = UDim2.fromOffset(18, 18)}, 0.2) end)
+
+			CopyBtn.MouseButton1Click:Connect(function()
+				if #Input.Text > 0 and setclipboard then
+					setclipboard(Input.Text)
+					CopyBtn.Image = "rbxassetid://10827797825" -- Icon Tích xanh
+					Tween(CopyBtn, {ImageColor3 = Color3.fromRGB(80, 255, 80)}, 0.1)
+					task.wait(1)
+					CopyBtn.Image = "rbxassetid://10827798319"
+					Tween(CopyBtn, {ImageColor3 = Colors.Accent}, 0.3)
+				end
+			end)
+			CopyBtn.MouseEnter:Connect(function() if #Input.Text>0 then Tween(CopyBtn, {ImageTransparency = 0, Size = UDim2.fromOffset(18, 18)}, 0.1) end end)
+			CopyBtn.MouseLeave:Connect(function() Tween(CopyBtn, {ImageTransparency = 0.3, Size = UDim2.fromOffset(16, 16)}, 0.2) end)
+
+			
+			Input:GetPropertyChangedSignal("Text"):Connect(function()
+				local t = Input.Text
+
+				
+				if numericOnly then
+					t = string.gsub(t, "%D", "")
+					if Input.Text ~= t then Input.Text = t end
+				end
+
+				
+				if maxChars > 0 and #t > maxChars then
+					Input.Text = string.sub(t, 1, maxChars)
+					
+					if isMobile and HapticService:IsMotorSupported(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Small) then
+						HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Small, 0.8)
+						task.delay(0.1, function() HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Small, 0) end)
+					end
+				end
+
+				UpdateUtilsVisibility()
+
+				if realtime then
+					task.spawn(callback, Input.Text)
+				end
+			end)
+
+			
 			Input.Focused:Connect(function()
-				TweenService:Create(InputHolder, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-					Size = UDim2.new(0, 180, 0, 26), 
-					Position = UDim2.new(1, -195, 0.5, -13)
-				}):Play()
-				TweenService:Create(InputHolder:FindFirstChildOfClass("UIStroke"), TweenInfo.new(0.4), {Color = Color3.fromRGB(80, 150, 255)}):Play()
-				TweenService:Create(Label, TweenInfo.new(0.4), {TextTransparency = 0.5}):Play()
+				if isMobile and HapticService:IsMotorSupported(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Small) then
+					HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Small, 0.3)
+					task.delay(0.05, function() HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Small, 0) end)
+				end
+
+				
+				TweenService:Create(BoxBg.Stroke, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Color = Colors.Accent, Transparency = 0}):Play()
+				TweenService:Create(InputHolder.InnerStroke, TweenInfo.new(0.4), {Color = Colors.Accent}):Play()
+				TweenService:Create(Glow, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0.5}):Play()
+				TweenService:Create(Label, TweenInfo.new(0.3), {TextColor3 = Colors.Accent}):Play()
+				
+				
+				TweenService:Create(Underline, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 2)}):Play()
+				
+				UpdateUtilsVisibility()
 			end)
 
 			Input.FocusLost:Connect(function(enterPressed)
-				TweenService:Create(InputHolder, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-					Size = UDim2.new(0, 60, 0, 26),
-					Position = UDim2.new(1, -75, 0.5, -13)
-				}):Play()
-				TweenService:Create(InputHolder:FindFirstChildOfClass("UIStroke"), TweenInfo.new(0.4), {Color = Color3.fromRGB(50, 50, 70)}):Play()
-				TweenService:Create(Label, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
-				callback(Input.Text, enterPressed)
-			end)
-		end
+				
+				TweenService:Create(BoxBg.Stroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Color = Colors.Stroke, Transparency = 0.2}):Play()
+				TweenService:Create(InputHolder.InnerStroke, TweenInfo.new(0.4), {Color = Color3.fromRGB(40, 40, 55)}):Play()
+				TweenService:Create(Glow, TweenInfo.new(0.4), {ImageTransparency = 1}):Play()
+				TweenService:Create(Label, TweenInfo.new(0.3), {TextColor3 = Colors.TextMain}):Play()
+				
+				
+				TweenService:Create(Underline, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 0, 0, 2)}):Play()
+				
+				TweenService:Create(ClearBtn, TweenInfo.new(0.3), {ImageTransparency = 1}):Play()
+				TweenService:Create(CopyBtn, TweenInfo.new(0.3), {ImageTransparency = 1}):Play()
 
-		return Tab
-	end
+				
+				if not realtime then
+					task.spawn(callback, Input.Text, enterPressed)
+				end
+			end)
+
+			
+			UpdateUtilsVisibility()
+			TweenService:Create(ClearBtn, TweenInfo.new(0), {ImageTransparency = 1}):Play()
+			TweenService:Create(CopyBtn, TweenInfo.new(0), {ImageTransparency = 1}):Play()
+
+			
+			local TextboxAPI = {}
+			
+			function TextboxAPI:Set(newText)
+				Input.Text = tostring(newText)
+				if not realtime then task.spawn(callback, Input.Text, false) end
+			end
+
+			function TextboxAPI:Get()
+				return Input.Text
+			end
+			
+			function TextboxAPI:Clear()
+				Input.Text = ""
+				if not realtime then task.spawn(callback, "", false) end
+			end
+
+			function TextboxAPI:Focus()
+				Input:CaptureFocus()
+			end
+
+			return TextboxAPI
+		end
 
 	return self
 end

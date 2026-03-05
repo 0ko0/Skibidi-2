@@ -2594,6 +2594,9 @@ function Tab:Slider(config)
 			return TextboxAPI
 		end
 
+return Tab
+	end
+
 	return self
 end
 

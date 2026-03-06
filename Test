@@ -1,21 +1,24 @@
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
+local Mouse = Player:GetMouse()
 
--- CẤU HÌNH MÀU SẮC CHUẨN VIP (Đen Sâu & Xanh Dạ Quang)
+-- [ BẢNG MÀU CHUẨN VIP BẤT TỬ ]
 local Theme = {
-	PureBlack = Color3.fromRGB(0, 0, 0),         -- Nền chính
-	DarkPanel = Color3.fromRGB(10, 10, 12),      -- Nền Sidebar/Top
-	Element = Color3.fromRGB(15, 15, 18),        -- Nền nút bấm
-	ElementHover = Color3.fromRGB(22, 22, 26),   -- Nền nút khi di chuột
-	Accent = Color3.fromRGB(110, 150, 255),      -- Xanh chủ đạo (Blue)
-	Text = Color3.fromRGB(255, 255, 255),
-	TextMuted = Color3.fromRGB(140, 140, 150),
-	Stroke = Color3.fromRGB(30, 30, 35)
+	AbsoluteBlack = Color3.fromRGB(0, 0, 0),
+	DarkSpace = Color3.fromRGB(8, 8, 10),
+	Component = Color3.fromRGB(12, 12, 15),
+	ComponentHover = Color3.fromRGB(18, 18, 22),
+	NeonBlue = Color3.fromRGB(110, 150, 255),
+	DeepBlue = Color3.fromRGB(40, 70, 200),
+	White = Color3.fromRGB(255, 255, 255),
+	TextGray = Color3.fromRGB(160, 160, 175)
 }
 
+-- [ TIỆN ÍCH ]
 local function Create(class, props, children)
 	local obj = Instance.new(class)
 	for k, v in pairs(props or {}) do obj[k] = v end
@@ -23,10 +26,32 @@ local function Create(class, props, children)
 	return obj
 end
 
-local function Tween(obj, props, time, style)
-	local tw = TweenService:Create(obj, TweenInfo.new(time or 0.3, style or Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props)
+local function Tween(obj, props, time, style, dir)
+	local tw = TweenService:Create(obj, TweenInfo.new(time or 0.4, style or Enum.EasingStyle.Quint, dir or Enum.EasingDirection.Out), props)
 	tw:Play()
 	return tw
+end
+
+-- Hiệu ứng Ripple (Sóng vỗ khi Click)
+local function CreateRipple(Parent)
+	local ripple = Create("Frame", {
+		BackgroundColor3 = Theme.NeonBlue,
+		BackgroundTransparency = 0.6,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromOffset(Mouse.X - Parent.AbsolutePosition.X, Mouse.Y - Parent.AbsolutePosition.Y),
+		Size = UDim2.fromOffset(0, 0),
+		ZIndex = 50,
+		Parent = Parent
+	}, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
+	
+	Parent.ClipsDescendants = true
+	local targetSize = math.max(Parent.AbsoluteSize.X, Parent.AbsoluteSize.Y) * 1.5
+	local t = TweenService:Create(ripple, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(targetSize, targetSize),
+		BackgroundTransparency = 1
+	})
+	t:Play()
+	t.Completed:Connect(function() ripple:Destroy() end)
 end
 
 local Library = { ToggleKey = Enum.KeyCode.RightControl }
@@ -34,85 +59,94 @@ Library.__index = Library
 
 function Library:New(config)
 	local self = setmetatable({}, Library)
-	self.Title = config.Title or "VUZX ULTIMATE"
 	self.Open = true
 	
 	local targetGui = gethui and gethui() or CoreGui
-	if targetGui:FindFirstChild("VuzxUltimate") then targetGui.VuzxUltimate:Destroy() end
+	if targetGui:FindFirstChild("VuzxGodTier") then targetGui.VuzxGodTier:Destroy() end
 
-	self.Gui = Create("ScreenGui", { Name = "VuzxUltimate", Parent = targetGui, IgnoreGuiInset = true, ResetOnSpawn = false })
+	self.Gui = Create("ScreenGui", { Name = "VuzxGodTier", Parent = targetGui, IgnoreGuiInset = true, ResetOnSpawn = false })
 
-	-- Nút Floating cho Mobile (Glow Effect)
-	self.MobileBtn = Create("TextButton", {
-		Size = UDim2.fromOffset(45, 45), Position = UDim2.new(0, 15, 0.5, -22),
-		BackgroundColor3 = Theme.PureBlack, Text = "", Parent = self.Gui, ZIndex = 100
-	}, {
-		Create("UICorner", { CornerRadius = UDim.new(1, 0) }),
-		Create("UIStroke", { Color = Theme.Accent, Thickness = 2, Transparency = 0.2 }),
-		Create("ImageLabel", {
-			Image = "rbxassetid://6031090990", Size = UDim2.fromOffset(24, 24),
-			AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
-			BackgroundTransparency = 1, ImageColor3 = Theme.Accent
-		})
-	})
-
-	-- Drop Shadow giả lập 3D
-	local Shadow = Create("ImageLabel", {
+	-- [ AMBIENT GLOW DƯỚI NỀN ]
+	local AmbientGlow = Create("ImageLabel", {
 		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(630, 450), BackgroundTransparency = 1,
-		Image = "rbxassetid://4731308668", ImageColor3 = Color3.fromRGB(0, 0, 0), ImageTransparency = 0.3,
-		Parent = self.Gui
+		Size = UDim2.fromOffset(750, 550), BackgroundTransparency = 1,
+		Image = "rbxassetid://13192864560", ImageColor3 = Theme.NeonBlue, ImageTransparency = 0.6,
+		ZIndex = 0, Parent = self.Gui
 	})
 
-	-- Bảng Main sử dụng CanvasGroup để Fade mượt mà
+	-- [ MAIN PANEL VỚI CANVASGROUP ]
 	self.Main = Create("CanvasGroup", {
-		Size = UDim2.fromOffset(600, 420), Position = UDim2.fromScale(0.5, 0.5),
-		AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Theme.PureBlack,
-		BorderSizePixel = 0, Parent = self.Gui
+		Size = UDim2.fromOffset(650, 450), Position = UDim2.fromScale(0.5, 0.5),
+		AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Theme.AbsoluteBlack,
+		BorderSizePixel = 0, Parent = self.Gui, ZIndex = 2
 	}, {
-		Create("UICorner", { CornerRadius = UDim.new(0, 12) }),
-		Create("UIStroke", { Color = Theme.Stroke, Thickness = 1 }),
-		Create("UISizeConstraint", { MaxSize = Vector2.new(600, 420), MinSize = Vector2.new(350, 250) })
+		Create("UICorner", { CornerRadius = UDim.new(0, 14) }),
+		Create("UISizeConstraint", { MaxSize = Vector2.new(650, 450), MinSize = Vector2.new(350, 250) })
 	})
 	
-	-- Responsive cho điện thoại
-	if workspace.CurrentCamera.ViewportSize.X < 650 then self.Main.Size = UDim2.new(0.9, 0, 0.85, 0) end
-	Shadow.Size = UDim2.new(self.Main.Size.X.Scale, self.Main.Size.X.Offset + 30, self.Main.Size.Y.Scale, self.Main.Size.Y.Offset + 30)
+	-- Responsive
+	if workspace.CurrentCamera.ViewportSize.X < 700 then self.Main.Size = UDim2.new(0.95, 0, 0.9, 0) end
+	AmbientGlow.Size = UDim2.new(self.Main.Size.X.Scale, self.Main.Size.X.Offset + 150, self.Main.Size.Y.Scale, self.Main.Size.Y.Offset + 150)
 
-	-- TOPBAR (Có hình đại diện người chơi)
-	self.Top = Create("Frame", { Size = UDim2.new(1, 0, 0, 50), BackgroundColor3 = Theme.PureBlack, Parent = self.Main }, {
-		Create("Frame", { Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 1, 0), BackgroundColor3 = Theme.Stroke, BorderSizePixel = 0 }),
+	-- [ VIỀN SÁNG ĐỘNG (ANIMATED STROKE) ]
+	local StrokeFrame = Create("Frame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Parent = self.Main }, {
+		Create("UICorner", { CornerRadius = UDim.new(0, 14) })
+	})
+	local MainStroke = Create("UIStroke", { Color = Theme.White, Thickness = 1.5, Parent = StrokeFrame })
+	local StrokeGradient = Create("UIGradient", {
+		Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Theme.AbsoluteBlack),
+			ColorSequenceKeypoint.new(0.5, Theme.NeonBlue),
+			ColorSequenceKeypoint.new(1, Theme.AbsoluteBlack)
+		}),
+		Parent = MainStroke
+	})
+	
+	RunService.RenderStepped:Connect(function()
+		if self.Main.Visible then StrokeGradient.Rotation = (StrokeGradient.Rotation + 1.5) % 360 end
+	end)
+
+	-- [ TOPBAR VÀ AVATAR VIP ]
+	self.Top = Create("Frame", { Size = UDim2.new(1, 0, 0, 55), BackgroundColor3 = Theme.AbsoluteBlack, Parent = self.Main }, {
+		Create("Frame", { Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 1, 0), BackgroundColor3 = Theme.Component, BorderSizePixel = 0 }),
 		Create("TextLabel", {
-			Text = self.Title, Font = Enum.Font.GothamBold, TextSize = 16, TextColor3 = Theme.Accent,
-			Position = UDim2.fromOffset(20, 0), Size = UDim2.new(0.5, 0, 1, 0), TextXAlignment = "Left", BackgroundTransparency = 1
+			Text = config.Title or "VUZX GOD-TIER", Font = Enum.Font.GothamBlack, TextSize = 18, TextColor3 = Theme.White,
+			Position = UDim2.fromOffset(25, 0), Size = UDim2.new(0.5, 0, 1, 0), TextXAlignment = "Left", BackgroundTransparency = 1
+		}, {
+			Create("UIGradient", { Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Theme.NeonBlue), ColorSequenceKeypoint.new(1, Theme.DeepBlue)} })
 		})
 	})
 
-	-- Profile Góc phải
 	local userThumb = Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-	Create("Frame", { Size = UDim2.fromOffset(150, 40), Position = UDim2.new(1, -160, 0.5, -20), BackgroundTransparency = 1, Parent = self.Top }, {
-		Create("TextLabel", { Text = Player.DisplayName, Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.Text, Position = UDim2.new(0, 0, 0, 0), Size = UDim2.new(1, -45, 1, 0), TextXAlignment = "Right", BackgroundTransparency = 1 }),
-		Create("ImageLabel", { Size = UDim2.fromOffset(30, 30), Position = UDim2.new(1, -35, 0.5, -15), Image = userThumb, BackgroundColor3 = Theme.Element, Parent = nil }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
-	}):GetChildren()[2].Parent = self.Top:GetChildren()[3] -- Link image
+	local Profile = Create("Frame", { Size = UDim2.fromOffset(160, 40), Position = UDim2.new(1, -175, 0.5, -20), BackgroundTransparency = 1, Parent = self.Top })
+	Create("TextLabel", { Text = "Welcome,", Font = Enum.Font.GothamMedium, TextSize = 10, TextColor3 = Theme.TextGray, Position = UDim2.new(0, 0, 0, 4), Size = UDim2.new(1, -45, 0.5, 0), TextXAlignment = "Right", BackgroundTransparency = 1, Parent = Profile })
+	Create("TextLabel", { Text = Player.DisplayName, Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.White, Position = UDim2.new(0, 0, 0.5, -2), Size = UDim2.new(1, -45, 0.5, 0), TextXAlignment = "Right", BackgroundTransparency = 1, Parent = Profile })
+	
+	local AvatarBg = Create("Frame", { Size = UDim2.fromOffset(36, 36), Position = UDim2.new(1, -36, 0.5, -18), BackgroundColor3 = Theme.AbsoluteBlack, Parent = Profile }, {
+		Create("UICorner", { CornerRadius = UDim.new(1, 0) }),
+		Create("UIStroke", { Color = Theme.NeonBlue, Thickness = 2, Transparency = 0.3 }),
+		Create("ImageLabel", { Size = UDim2.fromScale(1, 1), Image = userThumb, BackgroundTransparency = 1 }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
+	})
 
-	-- SIDEBAR (Menu Tab)
-	self.Sidebar = Create("Frame", { Size = UDim2.new(0, 160, 1, -50), Position = UDim2.fromOffset(0, 50), BackgroundColor3 = Theme.DarkPanel, BorderSizePixel = 0, Parent = self.Main }, {
-		Create("Frame", { Size = UDim2.new(0, 1), Position = UDim2.new(1, 0, 0, 0), BackgroundColor3 = Theme.Stroke, BorderSizePixel = 0 }),
+	-- [ SIDEBAR & TABS ]
+	self.Sidebar = Create("Frame", { Size = UDim2.new(0, 170, 1, -55), Position = UDim2.fromOffset(0, 55), BackgroundColor3 = Theme.DarkSpace, BorderSizePixel = 0, Parent = self.Main }, {
+		Create("Frame", { Size = UDim2.new(0, 1, 1, 0), Position = UDim2.new(1, 0, 0, 0), BackgroundColor3 = Theme.Component, BorderSizePixel = 0 }),
 		Create("ScrollingFrame", { Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, ScrollBarThickness = 0, Name = "Scroll" }, {
-			Create("UIListLayout", { Padding = UDim.new(0, 6), HorizontalAlignment = "Center" }),
+			Create("UIListLayout", { Padding = UDim.new(0, 8), HorizontalAlignment = "Center" }),
 			Create("UIPadding", { PaddingTop = UDim.new(0, 15) })
 		})
 	})
 
-	-- THANH TRƯỢT ĐỘNG (Animated Indicator)
-	self.TabIndicator = Create("Frame", { Size = UDim2.new(0, 4, 0, 20), BackgroundColor3 = Theme.Accent, Position = UDim2.fromOffset(0, 15), Parent = self.Sidebar }, {
-		Create("UICorner", { CornerRadius = UDim.new(1, 0) }),
-		Create("UIGradient", { Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Theme.Accent), ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 100, 255))}, Rotation = 90 }),
+	-- Vùng chứa Nội Dung
+	self.Pages = Create("Frame", { Size = UDim2.new(1, -170, 1, -55), Position = UDim2.fromOffset(170, 55), BackgroundTransparency = 1, Parent = self.Main })
+
+	-- Cục Tab Động (Nổi Bật Nhất)
+	self.TabHighlight = Create("Frame", { Size = UDim2.new(1, -20, 0, 38), BackgroundColor3 = Theme.NeonBlue, BackgroundTransparency = 0.1, Position = UDim2.fromOffset(10, -100), Parent = self.Sidebar.Scroll }, {
+		Create("UICorner", { CornerRadius = UDim.new(0, 8) }),
+		Create("UIGradient", { Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Theme.NeonBlue), ColorSequenceKeypoint.new(1, Theme.DeepBlue)}, Rotation = 45 })
 	})
 
-	self.Pages = Create("Frame", { Size = UDim2.new(1, -160, 1, -50), Position = UDim2.fromOffset(160, 50), BackgroundTransparency = 1, Parent = self.Main })
-
-	-- Hệ thống Dragging siêu mượt
+	-- [ CHỨC NĂNG DRAG MƯỢT ]
 	local dragging, dragStart, startPos
 	self.Top.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -123,57 +157,90 @@ function Library:New(config)
 	UIS.InputChanged:Connect(function(input)
 		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 			local delta = input.Position - dragStart
-			Tween(self.Main, {Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)}, 0.1)
-			Shadow.Position = self.Main.Position
+			local targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+			Tween(self.Main, {Position = targetPos}, 0.15)
+			Tween(AmbientGlow, {Position = targetPos}, 0.15)
 		end
 	end)
 
-	-- Ẩn/Hiện UI VIP
-	local function ToggleUI()
-		self.Open = not self.Open
-		if self.Open then
-			self.Main.Visible = true; Shadow.Visible = true
-			Tween(self.Main, {GroupTransparency = 0, Size = workspace.CurrentCamera.ViewportSize.X < 650 and UDim2.new(0.9, 0, 0.85, 0) or UDim2.fromOffset(600, 420)}, 0.4)
-			Tween(Shadow, {ImageTransparency = 0.3}, 0.4)
-		else
-			Tween(Shadow, {ImageTransparency = 1}, 0.3)
-			local tw = Tween(self.Main, {GroupTransparency = 1, Size = UDim2.fromOffset(550, 380)}, 0.3)
-			tw.Completed:Connect(function() if not self.Open then self.Main.Visible = false; Shadow.Visible = false end end)
-		end
-	end
-	UIS.InputBegan:Connect(function(input, gpe) if not gpe and input.KeyCode == Library.ToggleKey then ToggleUI() end end)
-	self.MobileBtn.MouseButton1Click:Connect(ToggleUI)
-
-	-- Floating Button Dragging
-	local mDrag, mStart, mPos
-	self.MobileBtn.InputBegan:Connect(function(input)
+	-- [ FLOATING BUTTON MOBILE CỰC ĐẸP ]
+	self.FloatingBtn = Create("TextButton", { Size = UDim2.fromOffset(50, 50), Position = UDim2.new(0, 20, 0.5, -25), BackgroundColor3 = Theme.AbsoluteBlack, Text = "", Parent = self.Gui, ZIndex = 100 }, {
+		Create("UICorner", { CornerRadius = UDim.new(1, 0) }),
+		Create("UIStroke", { Color = Theme.NeonBlue, Thickness = 2 }),
+		Create("ImageLabel", { Image = "rbxassetid://10886337851", Size = UDim2.fromOffset(26, 26), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), BackgroundTransparency = 1, ImageColor3 = Theme.NeonBlue })
+	})
+	
+	local fbDrag, fbStart, fbPos
+	self.FloatingBtn.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			mDrag = true; mStart = input.Position; mPos = self.MobileBtn.Position
-			input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then mDrag = false end end)
+			fbDrag = true; fbStart = input.Position; fbPos = self.FloatingBtn.Position
+			input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then fbDrag = false end end)
 		end
 	end)
 	UIS.InputChanged:Connect(function(input)
-		if mDrag and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local delta = input.Position - mStart
-			self.MobileBtn.Position = UDim2.new(0, mPos.X.Offset + delta.X, 0, mPos.Y.Offset + delta.Y)
+		if fbDrag and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - fbStart
+			Tween(self.FloatingBtn, {Position = UDim2.new(0, fbPos.X.Offset + delta.X, 0, fbPos.Y.Offset + delta.Y)}, 0.1)
 		end
 	end)
+
+	local function ToggleUI()
+		self.Open = not self.Open
+		if self.Open then
+			self.Main.Visible = true; AmbientGlow.Visible = true
+			Tween(self.Main, {GroupTransparency = 0, Size = workspace.CurrentCamera.ViewportSize.X < 700 and UDim2.new(0.95, 0, 0.9, 0) or UDim2.fromOffset(650, 450)}, 0.5, Enum.EasingStyle.Exponential)
+			Tween(AmbientGlow, {ImageTransparency = 0.6, Size = UDim2.new(self.Main.Size.X.Scale, self.Main.Size.X.Offset + 150, self.Main.Size.Y.Scale, self.Main.Size.Y.Offset + 150)}, 0.5)
+		else
+			Tween(AmbientGlow, {ImageTransparency = 1, Size = UDim2.fromOffset(0,0)}, 0.4)
+			local tw = Tween(self.Main, {GroupTransparency = 1, Size = UDim2.fromOffset(600, 400)}, 0.4, Enum.EasingStyle.Exponential)
+			tw.Completed:Connect(function() if not self.Open then self.Main.Visible = false; AmbientGlow.Visible = false end end)
+		end
+	end
+	UIS.InputBegan:Connect(function(input, gpe) if not gpe and input.KeyCode == Library.ToggleKey then ToggleUI() end end)
+	self.FloatingBtn.MouseButton1Click:Connect(function() CreateRipple(self.FloatingBtn); ToggleUI() end)
+
+	-- [ HỆ THỐNG NOTIFICATION VỚI PROGRESS BAR ĐỈNH CAO ]
+	function Library:Notify(cfg)
+		local title, content, time = cfg.Title or "SYSTEM", cfg.Content or "Message", cfg.Time or 5
+		local NotifGui = targetGui:FindFirstChild("VuzxNotifSystem") or Create("ScreenGui", { Name = "VuzxNotifSystem", Parent = targetGui })
+		local Holder = NotifGui:FindFirstChild("Holder") or Create("Frame", { Name = "Holder", Parent = NotifGui, Size = UDim2.new(0, 320, 1, -20), Position = UDim2.new(1, -330, 0, 10), BackgroundTransparency = 1 }, { Create("UIListLayout", { VerticalAlignment = "Bottom", Padding = UDim.new(0, 12) }) })
+
+		local N = Create("Frame", { Size = UDim2.new(1, 0, 0, 85), BackgroundColor3 = Theme.AbsoluteBlack, BackgroundTransparency = 0.1, Position = UDim2.new(1, 50, 0, 0), Parent = Holder }, {
+			Create("UICorner", { CornerRadius = UDim.new(0, 10) }),
+			Create("UIStroke", { Color = Theme.Component, Thickness = 2 }),
+			Create("TextLabel", { Text = title, Font = Enum.Font.GothamBold, TextSize = 14, TextColor3 = Theme.NeonBlue, Position = UDim2.fromOffset(15, 12), Size = UDim2.new(1, -30, 0, 15), TextXAlignment = "Left", BackgroundTransparency = 1 }),
+			Create("TextLabel", { Text = content, Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = Theme.TextGray, Position = UDim2.fromOffset(15, 32), Size = UDim2.new(1, -30, 0, 40), TextXAlignment = "Left", TextYAlignment = "Top", TextWrapped = true, BackgroundTransparency = 1 })
+		})
+		
+		local ProgressBar = Create("Frame", { Size = UDim2.new(1, -20, 0, 3), Position = UDim2.new(0, 10, 1, -8), BackgroundColor3 = Theme.NeonBlue, Parent = N }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
+
+		Tween(N, {Position = UDim2.new(0, 0, 0, 0)}, 0.6, Enum.EasingStyle.Elastic)
+		Tween(N.UIStroke, {Color = Theme.NeonBlue}, 0.5)
+
+		TweenService:Create(ProgressBar, TweenInfo.new(time, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 3)}):Play()
+
+		task.delay(time, function()
+			local out = Tween(N, {Position = UDim2.new(1, 100, 0, 0), BackgroundTransparency = 1}, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+			for _, v in pairs(N:GetDescendants()) do if v:IsA("TextLabel") then Tween(v, {TextTransparency = 1}, 0.3) elseif v:IsA("UIStroke") then Tween(v, {Transparency = 1}, 0.3) end end
+			out.Completed:Connect(function() N:Destroy() end)
+		end)
+	end
 
 	local CurrentTab = nil
 
 	function self:NewTab(name)
 		local Tab = {}
 		local TabBtn = Create("TextButton", {
-			Size = UDim2.new(1, -20, 0, 35), BackgroundTransparency = 1, Text = "  " .. name,
-			Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.TextMuted, TextXAlignment = "Left",
-			Parent = self.Sidebar.Scroll
-		}, { Create("UICorner", { CornerRadius = UDim.new(0, 6) }) })
+			Size = UDim2.new(1, -20, 0, 38), BackgroundTransparency = 1, Text = "  " .. name,
+			Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.TextGray, TextXAlignment = "Left",
+			Parent = self.Sidebar.Scroll, ZIndex = 2
+		})
 
 		local Page = Create("ScrollingFrame", {
-			Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Visible = false, ScrollBarThickness = 2,
-			ScrollBarImageColor3 = Theme.Accent, Parent = self.Pages
+			Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Visible = false, ScrollBarThickness = 1,
+			ScrollBarImageColor3 = Theme.NeonBlue, Parent = self.Pages
 		}, {
-			Create("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
+			Create("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }),
 			Create("UIPadding", { PaddingTop = UDim.new(0, 15), PaddingBottom = UDim.new(0, 15), PaddingLeft = UDim.new(0, 15), PaddingRight = UDim.new(0, 15) })
 		})
 
@@ -183,118 +250,77 @@ function Library:New(config)
 
 		local function ActivateTab()
 			if CurrentTab == Page then return end
-			if CurrentTab then CurrentTab.Visible = false end
+			if CurrentTab then Tween(CurrentTab, {GroupTransparency = 1}, 0.2).Completed:Connect(function() CurrentTab.Visible = false end) end
+			
 			Page.Visible = true; CurrentTab = Page
-
-			-- Di chuyển Indicator
+			
+			-- Animation cục sáng nhảy tới Tab
 			local targetY = TabBtn.AbsolutePosition.Y - self.Sidebar.Scroll.AbsolutePosition.Y + self.Sidebar.Scroll.CanvasPosition.Y
-			Tween(self.TabIndicator, {Position = UDim2.new(0, 0, 0, targetY + 7)}, 0.3)
+			Tween(self.TabHighlight, {Position = UDim2.new(0, 10, 0, targetY)}, 0.4, Enum.EasingStyle.Exponential)
 			
 			for _, btn in pairs(self.Sidebar.Scroll:GetChildren()) do
-				if btn:IsA("TextButton") then Tween(btn, {TextColor3 = Theme.TextMuted, TextSize = 13, BackgroundTransparency = 1}, 0.2) end
+				if btn:IsA("TextButton") then Tween(btn, {TextColor3 = Theme.TextGray}, 0.2) end
 			end
-			Tween(TabBtn, {TextColor3 = Theme.Accent, TextSize = 14, BackgroundColor3 = Theme.Element, BackgroundTransparency = 0.5}, 0.2)
+			Tween(TabBtn, {TextColor3 = Theme.White}, 0.2)
 		end
 
 		if not CurrentTab then ActivateTab() end
 		TabBtn.MouseButton1Click:Connect(ActivateTab)
 
-		-- =================== COMPONENTS TỐI TÂN =================== --
+		-- [ TỐI TÂN HÓA COMPONENTS ]
 
 		function Tab:Button(config)
-			local text = config.Name or "Button"
-			local callback = config.Callback or function() end
-
-			local Btn = Create("TextButton", { Size = UDim2.new(1, 0, 0, 42), BackgroundColor3 = Theme.Element, AutoButtonColor = false, Text = "", Parent = Page }, {
-				Create("UICorner", { CornerRadius = UDim.new(0, 8) }),
-				Create("UIStroke", { Color = Theme.Stroke, Thickness = 1 }),
-				Create("TextLabel", { Text = text, Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(15, 0), Size = UDim2.new(1, -30, 1, 0), TextXAlignment = "Left" }),
-				Create("ImageLabel", { Image = "rbxassetid://6031090990", Size = UDim2.fromOffset(20, 20), Position = UDim2.new(1, -30, 0.5, -10), BackgroundTransparency = 1, ImageColor3 = Theme.Accent })
+			local Btn = Create("TextButton", { Size = UDim2.new(1, 0, 0, 45), BackgroundColor3 = Theme.Component, AutoButtonColor = false, Text = "", Parent = Page }, {
+				Create("UICorner", { CornerRadius = UDim.new(0, 10) }), Create("UIStroke", { Color = Theme.ComponentHover, Thickness = 1 }),
+				Create("TextLabel", { Text = config.Name or "Button", Font = Enum.Font.GothamMedium, TextSize = 14, TextColor3 = Theme.White, BackgroundTransparency = 1, Position = UDim2.fromOffset(15, 0), Size = UDim2.new(1, -30, 1, 0), TextXAlignment = "Left" }),
+				Create("ImageLabel", { Image = "rbxassetid://6031090990", Size = UDim2.fromOffset(22, 22), Position = UDim2.new(1, -35, 0.5, -11), BackgroundTransparency = 1, ImageColor3 = Theme.NeonBlue })
 			})
-
-			Btn.MouseEnter:Connect(function() Tween(Btn.UIStroke, {Color = Theme.Accent, Transparency = 0.5}, 0.2); Tween(Btn, {BackgroundColor3 = Theme.ElementHover}, 0.2) end)
-			Btn.MouseLeave:Connect(function() Tween(Btn.UIStroke, {Color = Theme.Stroke, Transparency = 0}, 0.2); Tween(Btn, {BackgroundColor3 = Theme.Element}, 0.2) end)
-			Btn.MouseButton1Down:Connect(function() Tween(Btn, {Size = UDim2.new(0.98, 0, 0, 40)}, 0.1) end)
-			Btn.MouseButton1Up:Connect(function() Tween(Btn, {Size = UDim2.new(1, 0, 0, 42)}, 0.1); callback() end)
+			Btn.MouseEnter:Connect(function() Tween(Btn.UIStroke, {Color = Theme.NeonBlue}, 0.3) end)
+			Btn.MouseLeave:Connect(function() Tween(Btn.UIStroke, {Color = Theme.ComponentHover}, 0.3) end)
+			Btn.MouseButton1Down:Connect(function() CreateRipple(Btn); Tween(Btn, {Size = UDim2.new(0.97, 0, 0, 42)}, 0.1) end)
+			Btn.MouseButton1Up:Connect(function() Tween(Btn, {Size = UDim2.new(1, 0, 0, 45)}, 0.1, Enum.EasingStyle.Elastic); if config.Callback then config.Callback() end end)
 		end
 
 		function Tab:Toggle(config)
 			local state = config.Default or false
-			local callback = config.Callback or function() end
-
-			local Tgl = Create("TextButton", { Size = UDim2.new(1, 0, 0, 42), BackgroundColor3 = Theme.Element, AutoButtonColor = false, Text = "", Parent = Page }, {
-				Create("UICorner", { CornerRadius = UDim.new(0, 8) }),
-				Create("UIStroke", { Color = Theme.Stroke, Thickness = 1 }),
-				Create("TextLabel", { Text = config.Name or "Toggle", Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(15, 0), Size = UDim2.new(1, -80, 1, 0), TextXAlignment = "Left" })
+			local Tgl = Create("TextButton", { Size = UDim2.new(1, 0, 0, 45), BackgroundColor3 = Theme.Component, AutoButtonColor = false, Text = "", Parent = Page }, {
+				Create("UICorner", { CornerRadius = UDim.new(0, 10) }), Create("UIStroke", { Color = Theme.ComponentHover, Thickness = 1 }),
+				Create("TextLabel", { Text = config.Name, Font = Enum.Font.GothamMedium, TextSize = 14, TextColor3 = Theme.White, BackgroundTransparency = 1, Position = UDim2.fromOffset(15, 0), Size = UDim2.new(1, -80, 1, 0), TextXAlignment = "Left" })
 			})
+			local Switch = Create("Frame", { Size = UDim2.fromOffset(42, 22), Position = UDim2.new(1, -55, 0.5, -11), BackgroundColor3 = state and Theme.NeonBlue or Theme.DarkSpace, Parent = Tgl }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }), Create("UIStroke", {Color = Theme.ComponentHover, Thickness = 1}) })
+			local Knob = Create("Frame", { Size = UDim2.fromOffset(16, 16), Position = state and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8), BackgroundColor3 = Theme.White, Parent = Switch }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }), Create("UIStroke", {Color=Theme.AbsoluteBlack, Thickness=1, Transparency=0.8}) })
 
-			local Switch = Create("Frame", { Size = UDim2.fromOffset(40, 20), Position = UDim2.new(1, -55, 0.5, -10), BackgroundColor3 = state and Theme.Accent or Theme.PureBlack, Parent = Tgl }, {
-				Create("UICorner", { CornerRadius = UDim.new(1, 0) }), Create("UIStroke", {Color = Theme.Stroke, Thickness = 1})
-			})
-			local Knob = Create("Frame", { Size = UDim2.fromOffset(16, 16), Position = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8), BackgroundColor3 = Theme.Text, Parent = Switch }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
-
-			local function Update(val)
-				Tween(Switch, {BackgroundColor3 = val and Theme.Accent or Theme.PureBlack}, 0.25)
-				Tween(Knob, {Position = val and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}, 0.25)
-				Tween(Switch.UIStroke, {Color = val and Theme.Accent or Theme.Stroke}, 0.25)
-			end
-
-			Tgl.MouseButton1Click:Connect(function() state = not state; Update(state); callback(state) end)
+			Tgl.MouseButton1Click:Connect(function()
+				CreateRipple(Tgl); state = not state
+				Tween(Switch, {BackgroundColor3 = state and Theme.NeonBlue or Theme.DarkSpace}, 0.3)
+				Tween(Knob, {Position = state and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)}, 0.3, Enum.EasingStyle.Back)
+				Tween(Switch.UIStroke, {Color = state and Theme.NeonBlue or Theme.ComponentHover}, 0.3)
+				if config.Callback then config.Callback(state) end
+			end)
 		end
 
 		function Tab:Slider(config)
-			local min, max, default = config.Min or 0, config.Max or 100, config.Default or 0
-			local callback = config.Callback or function() end
+			local min, max, val = config.Min or 0, config.Max or 100, config.Default or 0
+			local Sldr = Create("Frame", { Size = UDim2.new(1, 0, 0, 60), BackgroundColor3 = Theme.Component, Parent = Page }, { Create("UICorner", { CornerRadius = UDim.new(0, 10) }), Create("UIStroke", { Color = Theme.ComponentHover, Thickness = 1 }) })
+			Create("TextLabel", { Text = config.Name, Font = Enum.Font.GothamMedium, TextSize = 14, TextColor3 = Theme.White, BackgroundTransparency = 1, Position = UDim2.fromOffset(15, 10), Size = UDim2.new(1, -50, 0, 20), TextXAlignment = "Left", Parent = Sldr })
+			local ValText = Create("TextLabel", { Text = tostring(val), Font = Enum.Font.GothamBlack, TextSize = 14, TextColor3 = Theme.NeonBlue, BackgroundTransparency = 1, Position = UDim2.new(1, -65, 0, 10), Size = UDim2.fromOffset(50, 20), TextXAlignment = "Right", Parent = Sldr })
 
-			local Sldr = Create("Frame", { Size = UDim2.new(1, 0, 0, 55), BackgroundColor3 = Theme.Element, Parent = Page }, {
-				Create("UICorner", { CornerRadius = UDim.new(0, 8) }), Create("UIStroke", { Color = Theme.Stroke, Thickness = 1 })
-			})
-			Create("TextLabel", { Text = config.Name, Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(15, 8), Size = UDim2.new(1, -50, 0, 20), TextXAlignment = "Left", Parent = Sldr })
-			
-			local ValLabel = Create("TextLabel", { Text = tostring(default), Font = Enum.Font.GothamBold, TextSize = 13, TextColor3 = Theme.Accent, BackgroundTransparency = 1, Position = UDim2.new(1, -65, 0, 8), Size = UDim2.fromOffset(50, 20), TextXAlignment = "Right", Parent = Sldr })
-
-			local Track = Create("TextButton", { Size = UDim2.new(1, -30, 0, 4), Position = UDim2.new(0, 15, 1, -15), BackgroundColor3 = Theme.PureBlack, Text = "", Parent = Sldr }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
-			local Fill = Create("Frame", { Size = UDim2.fromScale((default-min)/(max-min), 1), BackgroundColor3 = Theme.Accent, Parent = Track }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
-			local Knob = Create("Frame", { Size = UDim2.fromOffset(12, 12), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new((default-min)/(max-min), 0, 0.5, 0), BackgroundColor3 = Theme.Text, Parent = Track }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
+			local Track = Create("TextButton", { Size = UDim2.new(1, -30, 0, 6), Position = UDim2.new(0, 15, 1, -16), BackgroundColor3 = Theme.DarkSpace, Text = "", Parent = Sldr }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }) })
+			local Fill = Create("Frame", { Size = UDim2.fromScale((val-min)/(max-min), 1), BackgroundColor3 = Theme.NeonBlue, Parent = Track }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }), Create("UIGradient", {Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Theme.DeepBlue), ColorSequenceKeypoint.new(1, Theme.NeonBlue)}}) })
+			local Knob = Create("Frame", { Size = UDim2.fromOffset(14, 14), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new((val-min)/(max-min), 0, 0.5, 0), BackgroundColor3 = Theme.White, Parent = Track }, { Create("UICorner", { CornerRadius = UDim.new(1, 0) }), Create("UIStroke", {Color=Theme.NeonBlue, Thickness=3, Transparency=0.5}) })
 
 			local dragging = false
-			local function SetValue(input)
-				local perc = math.clamp((input.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1)
-				local val = math.floor(min + ((max - min) * perc))
-				ValLabel.Text = tostring(val)
-				Tween(Fill, {Size = UDim2.fromScale(perc, 1)}, 0.1); Tween(Knob, {Position = UDim2.new(perc, 0, 0.5, 0)}, 0.1)
-				callback(val)
+			local function Update(i)
+				local p = math.clamp((i.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1)
+				val = math.floor(min + ((max - min) * p))
+				ValText.Text = tostring(val)
+				Tween(Fill, {Size = UDim2.fromScale(p, 1)}, 0.1); Tween(Knob, {Position = UDim2.new(p, 0, 0.5, 0)}, 0.1)
+				if config.Callback then config.Callback(val) end
 			end
 
-			Track.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = true; Tween(Knob, {Size = UDim2.fromOffset(16, 16)}, 0.2); SetValue(i) end end)
-			UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = false; Tween(Knob, {Size = UDim2.fromOffset(12, 12)}, 0.2) end end)
-			UIS.InputChanged:Connect(function(i) if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then SetValue(i) end end)
-		end
-
-		function Tab:Dropdown(config)
-			local expanded = false
-			local Drop = Create("Frame", { Size = UDim2.new(1, 0, 0, 42), BackgroundColor3 = Theme.Element, ClipsDescendants = true, Parent = Page }, { Create("UICorner", { CornerRadius = UDim.new(0, 8) }), Create("UIStroke", { Color = Theme.Stroke, Thickness = 1 }) })
-			local Head = Create("TextButton", { Size = UDim2.new(1, 0, 0, 42), BackgroundTransparency = 1, Text = "", Parent = Drop })
-			local Title = Create("TextLabel", { Text = config.Name, Font = Enum.Font.GothamMedium, TextSize = 13, TextColor3 = Theme.Text, BackgroundTransparency = 1, Position = UDim2.fromOffset(15, 0), Size = UDim2.new(1, -50, 1, 0), TextXAlignment = "Left", Parent = Head })
-			local Arrow = Create("ImageLabel", { Image = "rbxassetid://6031091004", Size = UDim2.fromOffset(20, 20), Position = UDim2.new(1, -35, 0.5, -10), BackgroundTransparency = 1, ImageColor3 = Theme.TextMuted, Parent = Head })
-			
-			local Content = Create("Frame", { Size = UDim2.new(1, -20, 0, 0), Position = UDim2.fromOffset(10, 42), BackgroundTransparency = 1, Parent = Drop }, { Create("UIListLayout", { Padding = UDim.new(0, 4) }) })
-
-			Head.MouseButton1Click:Connect(function()
-				expanded = not expanded
-				Tween(Drop, {Size = UDim2.new(1, 0, 0, expanded and (42 + (#config.List * 32) + 10) or 42)}, 0.3)
-				Tween(Arrow, {Rotation = expanded and 180 or 0, ImageColor3 = expanded and Theme.Accent or Theme.TextMuted}, 0.3)
-				Tween(Drop.UIStroke, {Color = expanded and Theme.Accent or Theme.Stroke}, 0.3)
-			end)
-
-			for _, v in pairs(config.List) do
-				local Opt = Create("TextButton", { Size = UDim2.new(1, 0, 0, 28), BackgroundColor3 = Theme.PureBlack, Text = v, Font = Enum.Font.GothamMedium, TextSize = 12, TextColor3 = Theme.TextMuted, Parent = Content }, { Create("UICorner", { CornerRadius = UDim.new(0, 4) }) })
-				Opt.MouseButton1Click:Connect(function()
-					Title.Text = config.Name .. " : " .. v; expanded = false
-					Tween(Drop, {Size = UDim2.new(1, 0, 0, 42)}, 0.3); Tween(Arrow, {Rotation = 0, ImageColor3 = Theme.TextMuted}, 0.3); Tween(Drop.UIStroke, {Color = Theme.Stroke}, 0.3)
-					if config.Callback then config.Callback(v) end
-				end)
-			end
+			Track.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = true; Tween(Knob, {Size = UDim2.fromOffset(20, 20)}, 0.3, Enum.EasingStyle.Elastic); Update(i) end end)
+			UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = false; Tween(Knob, {Size = UDim2.fromOffset(14, 14)}, 0.2) end end)
+			UIS.InputChanged:Connect(function(i) if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then Update(i) end end)
 		end
 
 		return Tab

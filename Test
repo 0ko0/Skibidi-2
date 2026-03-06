@@ -248,7 +248,6 @@ function Library:New(config)
 			end
 		end)
 	end
-		end)
 
 		UIS.InputChanged:Connect(function(input)
 			if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then

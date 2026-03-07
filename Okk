@@ -1,6 +1,17 @@
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
 local Player = game:GetService("Players").LocalPlayer
+
+local Theme = {
+	Background = Color3.fromRGB(0, 0, 0),         
+	Secondary = Color3.fromRGB(12, 12, 15),       
+	Element = Color3.fromRGB(20, 20, 25),         
+	Accent = Color3.fromRGB(110, 150, 255),       
+	Text = Color3.fromRGB(255, 255, 255),         
+	TextDark = Color3.fromRGB(170, 170, 180),     
+	Stroke = Color3.fromRGB(35, 35, 45)         
+}
 
 local function Create(class, props, children)
 	local obj = Instance.new(class)
@@ -42,205 +53,153 @@ end
 
 function Library:New(config)
 	local self = setmetatable({}, Library)
-	
-	local C_Bg = Color3.fromRGB(0, 0, 0)
-	local C_Accent = Color3.fromRGB(110, 150, 255)
-	local C_Element = Color3.fromRGB(10, 10, 12)
-	local C_Hover = Color3.fromRGB(18, 18, 22)
-	local C_Stroke = Color3.fromRGB(30, 30, 40)
-	local C_Text = Color3.fromRGB(255, 255, 255)
-	local C_SubText = Color3.fromRGB(140, 140, 160)
+	local targetGui = gethui and gethui() or (CoreGui:FindFirstChild("RobloxGui") or Player:WaitForChild("PlayerGui"))
+
+	if targetGui:FindFirstChild("vuzx") then targetGui.vuzx:Destroy() end
 
 	self.Gui = Create("ScreenGui", {
-		Name = "vuzx_VIP_Edition",
+		Name = "vuzx",
 		ResetOnSpawn = false,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		IgnoreGuiInset = true, 
-		Parent = gethui()
+		IgnoreGuiInset = true,
+		Parent = targetGui
 	})
 
-	
-	self.Main = Create("CanvasGroup", {
-		Size = UDim2.new(0.9, 0, 0.85, 0), 
+	local Glow = Create("ImageLabel", {
+		Size = UDim2.new(1, 40, 1, 40),
+		Position = UDim2.fromOffset(-20, -20),
+		BackgroundTransparency = 1,
+		Image = "rbxassetid://5028857084",
+		ImageColor3 = Theme.Accent,
+		ImageTransparency = 0.8,
+		ScaleType = Enum.ScaleType.Slice,
+		SliceCenter = Rect.new(24, 24, 276, 276)
+	})
+
+	self.Main = Create("Frame", {
+		Size = UDim2.fromOffset(600, 400),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundColor3 = C_Bg,
-		BorderSizePixel = 0,
+		BackgroundColor3 = Theme.Background,
 		ClipsDescendants = false,
 		Parent = self.Gui
 	}, {
 		Create("UICorner", {CornerRadius = UDim.new(0, 12)}),
-		Create("UIStroke", {Color = C_Accent, Thickness = 1.5, Transparency = 0.2}),
-		Create("UISizeConstraint", {MaxSize = Vector2.new(550, 380), MinSize = Vector2.new(300, 250)})
+		Create("UIStroke", {Color = Theme.Stroke, Thickness = 1.5}),
+		Create("UISizeConstraint", {MaxSize = Vector2.new(700, 500), MinSize = Vector2.new(400, 250)}),
+		Glow
 	})
-
-	self.Main.Size = UDim2.new(0.8, 0, 0.75, 0)
-	self.Main.GroupTransparency = 1
-	TweenService:Create(self.Main, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0.9, 0, 0.85, 0),
-		GroupTransparency = 0
-	}):Play()
 
 	self.Top = Create("Frame", {
 		Size = UDim2.new(1, 0, 0, 50),
-		BackgroundColor3 = C_Bg,
+		BackgroundColor3 = Theme.Secondary,
 		BackgroundTransparency = 0.2,
 		Parent = self.Main
 	}, {
 		Create("UICorner", {CornerRadius = UDim.new(0, 12)}),
 		Create("Frame", {
 			Size = UDim2.new(1, 0, 0, 1),
-			Position = UDim2.new(0, 0, 1, 0),
-			BackgroundColor3 = C_Accent,
+			Position = UDim2.new(0, 0, 1, -1),
+			BackgroundColor3 = Theme.Accent,
 			BorderSizePixel = 0,
-			BackgroundTransparency = 0.3
-		}, {
-			Create("UIGradient", {
-				Transparency = NumberSequence.new({
-					NumberSequenceKeypoint.new(0, 1),
-					NumberSequenceKeypoint.new(0.5, 0),
-					NumberSequenceKeypoint.new(1, 1)
-				})
+			BackgroundTransparency = 0.5
+		}, { Create("UIGradient", {
+			Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Theme.Background),
+				ColorSequenceKeypoint.new(0.5, Theme.Accent),
+				ColorSequenceKeypoint.new(1, Theme.Background)
 			})
-		})
+		})})
 	})
 
 	Create("TextLabel", {
-		Text = config.Title or "VUZX VIP",
+		Text = config.Title or "VUZX",
 		Font = Enum.Font.GothamBlack,
 		TextSize = 18,
-		TextColor3 = C_Accent,
+		TextColor3 = Theme.Accent,
 		TextXAlignment = "Left",
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(20, 8),
-		Size = UDim2.new(0, 200, 0, 20),
-		Parent = self.Top
-	})
-
-	Create("TextLabel", {
-		Text = config.Footer or "Ultimate Edition",
-		Font = Enum.Font.GothamMedium,
-		TextSize = 11,
-		TextColor3 = C_SubText,
-		TextXAlignment = "Left",
-		BackgroundTransparency = 1,
-		Size = UDim2.new(0, 200, 0, 15),
-		Position = UDim2.fromOffset(20, 26),
+		Position = UDim2.fromOffset(20, 0),
+		Size = UDim2.new(0, 300, 1, 0),
 		Parent = self.Top
 	})
 
 	local IsOpen = true
 	local ToggleBtn = Create("TextButton", {
-		Text = "−",
-		Font = Enum.Font.GothamBlack,
-		TextSize = 24,
-		TextColor3 = C_Accent,
+		Text = "–",
+		Font = Enum.Font.GothamBold,
+		TextSize = 20,
+		TextColor3 = Theme.Accent,
 		BackgroundTransparency = 1,
-		Size = UDim2.fromOffset(35, 35),
-		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.new(1, -45, 0, 25),
+		Size = UDim2.fromOffset(40, 40),
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -10, 0.5, 0),
 		Parent = self.Top
 	})
 
 	self.Container = Create("Frame", {
-		Size = UDim2.new(1, 0, 1, -55),
-		Position = UDim2.fromOffset(0, 55),
+		Size = UDim2.new(1, 0, 1, -50),
+		Position = UDim2.fromOffset(0, 50),
 		BackgroundTransparency = 1,
-		ClipsDescendants = true,
 		Parent = self.Main
+	})
+
+	self.Sidebar = Create("ScrollingFrame", {
+		Size = UDim2.new(0, 160, 1, -20),
+		Position = UDim2.fromOffset(10, 10),
+		BackgroundTransparency = 1,
+		ScrollBarThickness = 0,
+		Parent = self.Container
+	}, {
+		Create("UIListLayout", {Padding = UDim.new(0, 6)}),
+		Create("UIPadding", {PaddingTop = UDim.new(0, 5), PaddingLeft = UDim.new(0, 5), PaddingRight = UDim.new(0, 5)})
+	})
+
+	self.Pages = Create("Frame", {
+		Size = UDim2.new(1, -190, 1, -20),
+		Position = UDim2.fromOffset(180, 10),
+		BackgroundTransparency = 1,
+		Parent = self.Container
 	})
 
 	ToggleBtn.MouseButton1Click:Connect(function()
 		IsOpen = not IsOpen
-		ToggleBtn.Text = IsOpen and "−" or "+"
-		TweenService:Create(self.Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-			Size = IsOpen and UDim2.new(0.9, 0, 0.85, 0) or UDim2.new(0.9, 0, 0, 50)
-		}):Play()
-		TweenService:Create(self.Main:FindFirstChildOfClass("UISizeConstraint"), TweenInfo.new(0.5), {
-			MaxSize = IsOpen and Vector2.new(550, 380) or Vector2.new(550, 50)
-		}):Play()
 		self.Container.Visible = IsOpen
+		Tween(self.Main, {0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out}, {
+			Size = IsOpen and UDim2.fromOffset(600, 400) or UDim2.fromOffset(600, 50)
+		})
 	end)
 
-	self.Sidebar = Create("Frame", {
-		Size = UDim2.new(0, 140, 1, -16),
-		Position = UDim2.fromOffset(10, 8),
-		BackgroundColor3 = C_Element,
-		BackgroundTransparency = 0.5,
-		Parent = self.Container
-	}, {
-		Create("UICorner", {CornerRadius = UDim.new(0, 8)}),
-		Create("UIStroke", {Color = C_Stroke, Thickness = 1}),
-	})
-
-	self.TabHighlight = Create("Frame", {
-		Size = UDim2.new(1, -16, 0, 32),
-		Position = UDim2.fromOffset(8, 8),
-		BackgroundColor3 = C_Accent,
-		BackgroundTransparency = 0.8,
-		Visible = false,
-		ZIndex = 2,
-		Parent = self.Sidebar
-	}, {
-		Create("UICorner", {CornerRadius = UDim.new(0, 6)}),
-		Create("UIStroke", {Color = C_Accent, Thickness = 1, Transparency = 0.2})
-	})
-
-	self.TabHolder = Create("ScrollingFrame", {
-		Size = UDim2.new(1, 0, 1, 0),
-		BackgroundTransparency = 1,
-		ScrollBarThickness = 0,
-		ZIndex = 3,
-		Parent = self.Sidebar
-	}, {
-		Create("UIListLayout", {Padding = UDim.new(0, 6)}),
-		Create("UIPadding", {PaddingTop = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8)})
-	})
-
-	self.Pages = Create("Frame", {
-		Size = UDim2.new(1, -165, 1, -16),
-		Position = UDim2.fromOffset(155, 8),
-		BackgroundTransparency = 1,
-		Parent = self.Container
-	})
-
-	do
-		local dragging, dragInput, dragStart, startPos
-		local smoothSpeed = 0.15
-		local targetPos = self.Main.Position
-
-		self.Top.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				dragging = true
-				dragStart = input.Position
-				startPos = self.Main.Position
-				input.Changed:Connect(function()
-					if input.UserInputState == Enum.UserInputState.End then dragging = false end
-				end)
-			end
-		end)
-
-		UIS.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-				dragInput = input
-			end
-		end)
-
-		game:GetService("RunService").RenderStepped:Connect(function()
-			if dragging and dragInput then
-				local delta = dragInput.Position - dragStart
-				targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-			end
-			self.Main.Position = self.Main.Position:Lerp(targetPos, smoothSpeed)
-		end)
-	end
-
-	UIS.InputBegan:Connect(function(input, gpe)
-		if not gpe and input.KeyCode == (Library.ToggleKey or Enum.KeyCode.RightControl) then
-			self.Open = not (self.Main.Visible)
-			self.Main.Visible = self.Open
+	local dragging, dragStart, startPos
+	self.Top.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = self.Main.Position
 		end
 	end)
+	UIS.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			Tween(self.Main, {0.1, Enum.EasingStyle.Linear}, {
+				Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+			})
+		end
+	end)
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+
+	UIS.InputBegan:Connect(function(input, gpe)
+		if not gpe and input.KeyCode == Library.ToggleKey then
+			self.Main.Visible = not self.Main.Visible
+		end
+	end)
+
+	self.Main.Size = UDim2.fromOffset(0, 0)
+	Tween(self.Main, {0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out}, {Size = UDim2.fromOffset(600, 400)})
 
 	function Library:Notify(config)
 		local title = config.Title or "Notification"

@@ -20,6 +20,15 @@ local function Create(class, props, children)
 	return obj
 end
 
+local function Tween(instance, tweenInfoArgs, properties)
+	local time = tweenInfoArgs[1] or 0.5
+	local style = tweenInfoArgs[2] or Enum.EasingStyle.Quad
+	local direction = tweenInfoArgs[3] or Enum.EasingDirection.Out
+	local tween = TweenService:Create(instance, TweenInfo.new(time, style, direction), properties)
+	tween:Play()
+	return tween
+end
+
 local Library = {}
 Library.__index = Library
 
@@ -160,6 +169,17 @@ function Library:New(config)
 		Position = UDim2.fromOffset(180, 10),
 		BackgroundTransparency = 1,
 		Parent = self.Container
+	})
+	
+	self.TabHolder = self.Sidebar
+	self.TabHighlight = Create("Frame", {
+		Size = UDim2.new(0, 3, 0, 34),
+		Position = UDim2.fromOffset(7, 10),
+		BackgroundColor3 = Theme.Accent,
+		Visible = false,
+		Parent = self.Container
+	}, {
+		Create("UICorner", {CornerRadius = UDim.new(1, 0)})
 	})
 
 	ToggleBtn.MouseButton1Click:Connect(function()
@@ -371,9 +391,10 @@ function Library:New(config)
 
 		TabBtn.MouseButton1Click:Connect(function()
 			self.TabHighlight.Visible = true
-			local yPos = TabBg.AbsolutePosition.Y - self.Sidebar.AbsolutePosition.Y
+            
+			local yPos = (TabBg.AbsolutePosition.Y - self.Sidebar.AbsolutePosition.Y) + 10
 			TweenService:Create(self.TabHighlight, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				Position = UDim2.fromOffset(8, yPos)
+				Position = UDim2.fromOffset(7, yPos)
 			}):Play()
 
 			for _, p in pairs(self.Pages:GetChildren()) do if p:IsA("ScrollingFrame") then p.Visible = false end end

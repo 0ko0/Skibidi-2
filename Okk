@@ -127,7 +127,7 @@ function Library:New(config)
 		}),
 		Create("UISizeConstraint", {
 			MaxSize = Vector2.new(800, 600), 
-			MinSize = Vector2.new(isMobile and 300 or 450, isMobile and 200 or 300)
+			MinSize = Vector2.new(isMobile and 300 or 450, 45) 
 		}),
 		DropShadow,
 		Glow

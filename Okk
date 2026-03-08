@@ -457,20 +457,14 @@ function Library:New(config)
 	function self:NewTab(name)
 		local Tab = {}
 
+
 		local TabBg = Create("Frame", {
 			Size = UDim2.new(1, 0, 0, 36),
 			BackgroundColor3 = Color3.fromRGB(25, 25, 35),
-			BackgroundTransparency = 1, 
+			BackgroundTransparency = 1,
 			Parent = self.TabHolder
 		}, {
-			Create("UICorner", {CornerRadius = UDim.new(0, 10)}),
-			Create("UIGradient", { 
-				Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 45)),
-					ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 35))
-				}),
-				Rotation = 45
-			})
+			Create("UICorner", {CornerRadius = UDim.new(0, 10)})
 		})
 
 		local TabStroke = Create("UIStroke", {
@@ -502,14 +496,13 @@ function Library:New(config)
 		
 		local Page = Create("ScrollingFrame", {
 			Size = UDim2.fromScale(1, 1),
+			Position = UDim2.new(0, 0, 0, 15), 
 			BackgroundTransparency = 1,
 			Visible = false,
 			BorderSizePixel = 0,
 			ScrollBarThickness = 2,
 			ScrollBarImageColor3 = Theme.Accent,
-			ScrollBarImageTransparency = 0.5,
 			CanvasSize = UDim2.new(0, 0, 0, 0),
-			ClipsDescendants = true,
 			Parent = self.Pages
 		}, {
 			Create("UIListLayout", {
@@ -527,28 +520,31 @@ function Library:New(config)
 
 		local UIListLayout = Page:FindFirstChildOfClass("UIListLayout")
 		local function UpdateCanvasSize()
-	
 			TweenService:Create(Page, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
 				CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 30)
 			}):Play()
 		end
 		UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
 
+		
 		TabBtn.MouseButton1Click:Connect(function()
 			self.TabHighlight.Visible = true
-		
+			
 			local yPos = (TabBg.AbsolutePosition.Y - self.Sidebar.AbsolutePosition.Y) + 10
 			TweenService:Create(self.TabHighlight, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 				Position = UDim2.fromOffset(4, yPos),
 				Size = UDim2.new(0, 4, 0, 36)
 			}):Play()
 
+			
 			for _, p in pairs(self.Pages:GetChildren()) do 
-				if p:IsA("ScrollingFrame") then 
-					TweenService:Create(p, TweenInfo.new(0.2), {GroupTransparency = 1}):Play()
-					task.delay(0.2, function() p.Visible = false end)
+				if p:IsA("ScrollingFrame") and p ~= Page then 
+					p.Visible = false
+					p.Position = UDim2.new(0, 0, 0, 15) 
 				end 
 			end
+			
+			
 			for _, bg in pairs(self.TabHolder:GetChildren()) do
 				if bg:IsA("Frame") and bg:FindFirstChild("TextButton") then
 					local btn = bg:FindFirstChild("TextButton")
@@ -562,8 +558,9 @@ function Library:New(config)
 			end
 
 			Page.Visible = true
-			Page.GroupTransparency = 1
-			TweenService:Create(Page, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {GroupTransparency = 0}):Play()
+			TweenService:Create(Page, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Position = UDim2.new(0, 0, 0, 0)
+			}):Play()
 			
 			TweenService:Create(TabBtn, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), {TextColor3 = Theme.Text}):Play()
 			TweenService:Create(Dot, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
@@ -574,23 +571,6 @@ function Library:New(config)
 			TweenService:Create(TabBg, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
 			TweenService:Create(TabStroke, TweenInfo.new(0.3), {Transparency = 0.5}):Play()
 		end)
-
-		local function SetupInteractiveBounce(HitButton, ElementBg)
-			HitButton.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					TweenService:Create(ElementBg, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						Size = UDim2.new(0.98, 0, ElementBg.Size.Y.Scale, ElementBg.Size.Y.Offset * 0.95)
-					}):Play()
-				end
-			end)
-			HitButton.InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					TweenService:Create(ElementBg, TweenInfo.new(0.4, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
-						Size = UDim2.new(1, 0, 0, ElementBg.Size.Y.Offset / 0.95) 
-					}):Play()
-				end
-			end)
-		end
 
 		function Tab:Button(config)
 			local text = config.Name or config.Text or "Button"
@@ -1178,4 +1158,3 @@ function Library:New(config)
 end
 
 return Library
-
